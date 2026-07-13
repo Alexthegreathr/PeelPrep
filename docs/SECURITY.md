@@ -1,6 +1,6 @@
 # PeelPrep — Security Design
 
-Status: **Proposed (Phase 0 planning)**. Controls land in the phases noted in IMPLEMENTATION_PLAN.md; the golden rule throughout: **the client is untrusted; every decision is made (or re-made) on the server, with RLS as the second, independent layer.**
+Status: **Approved 2026-07-13.** Controls land in the phases noted in IMPLEMENTATION_PLAN.md; the golden rule throughout: **the client is untrusted; every decision is made (or re-made) on the server, with RLS as the second, independent layer.**
 
 Sensitive data classes (per spec): résumés, cover letters, interview details, candidate answers, practice transcripts, outcomes, private notes, future recordings. All are RLS-protected, private-bucket-stored where files, excluded from logs, and covered by export + deletion.
 

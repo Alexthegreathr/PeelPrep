@@ -1,6 +1,6 @@
 # PeelPrep — AI Architecture
 
-Status: **Proposed (Phase 0 planning)**. Implemented in Phases 5–8 (see IMPLEMENTATION_PLAN.md).
+Status: **Approved 2026-07-13.** Implemented in Phases 5–8 (see IMPLEMENTATION_PLAN.md).
 
 Goals from the spec: provider-independent service layer; Anthropic in production; deterministic mock for dev/demo/tests; structured JSON outputs validated with Zod; grounded, non-fabricating prompts; full generation bookkeeping; server-enforced usage limits with atomic reservations.
 

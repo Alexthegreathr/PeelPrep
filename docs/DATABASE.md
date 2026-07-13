@@ -1,6 +1,6 @@
 # PeelPrep — Database Design (Supabase PostgreSQL)
 
-Status: **Proposed (Phase 0 planning)** — no migrations exist yet; they are created in Phases 2–3.
+Status: **Approved 2026-07-13** — no migrations exist yet; they are created in Phases 2–3.
 
 Conventions used throughout:
 

@@ -1,6 +1,6 @@
 # PeelPrep — Implementation Plan
 
-Status: **Proposed (Phase 0 planning)** — work begins only after this plan is approved, one phase at a time, with an explicit stop at the end of every phase (per AGENTS.md).
+Status: **Approved 2026-07-13** (all seven open decisions ratified as proposed — see §Ratified decisions). Work proceeds one phase at a time, with an explicit stop at the end of every phase (per AGENTS.md).
 
 ## Phase overview
 
@@ -179,12 +179,14 @@ Every phase ends with: all gate commands passing, failures reported honestly, ch
 | **Scope creep** (spec is broad) | H / M | phase gates with explicit stop; deferred lists per phase; beta boundary in ARCHITECTURE.md §8 |
 | **Legal/product: users treat predictions as promises** | M / M | pervasive "suggestions, not guarantees" copy (questions, readiness, outcome), terms language, no advancement/offer implications anywhere |
 
-## Open decisions requiring approval
+## Ratified decisions (approved 2026-07-13)
 
-1. **Per-task AI model tiering** — default everything to `claude-opus-4-8`, or run cheap/short tasks (practice turns, checklist, questions-to-ask) on `claude-sonnet-5` / `claude-haiku-4-5`? Cost vs quality; one-line config either way. (AI_ARCHITECTURE §3)
-2. **Fair-use numbers** in AI_ARCHITECTURE §8 (per-plan caps) — launch values need sign-off since they define the paid offer.
-3. **Free-tier brief depth** — proposed: `basic` depth = fewer sections + shorter analysis (skips `interviewer_intel` detail, `risks_gaps`). Confirm which sections Free actually gets.
-4. **Hard-delete policy (D5)** — confirm no trash/recovery window is acceptable for launch.
-5. **Admin phase 12b** — in or out of the launch definition.
-6. **Deployment target** — plan assumes Vercel + hosted Supabase + Stripe live mode; confirm (affects README/deploy docs in Phase 12 and function timeout assumptions).
-7. **Demo strategy** — separate demo account with seeded data vs. demo mode banner on any account when `NEXT_PUBLIC_DEMO_MODE=1` (proposed: both; seed script creates `demo@peelprep.example`).
+All seven previously open decisions were approved as proposed:
+
+1. **AI model tiering** — single default model `claude-opus-4-8` for every task at launch (`AI_MODEL_DEFAULT`); per-task tiering stays a config-only change if costs warrant revisiting. (AI_ARCHITECTURE §3)
+2. **Fair-use quotas** — launch with the per-plan numbers in AI_ARCHITECTURE §8.
+3. **Free-tier brief depth** — `basic` = shorter analysis; `interviewer_intel` limited to a summary of user-provided background; `risks_gaps` skipped (`brief_sections.status = skipped`).
+4. **Hard-delete policy (D5)** — confirmed; no trash/recovery window at launch.
+5. **Admin phase 12b** — optional and outside the launch definition; may ship post-launch.
+6. **Deployment target** — Vercel + hosted Supabase + Stripe live mode.
+7. **Demo strategy** — both: the seed script creates `demo@peelprep.example` with fictional data, and `NEXT_PUBLIC_DEMO_MODE=1` shows the demo banner.

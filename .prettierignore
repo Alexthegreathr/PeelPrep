@@ -1,0 +1,11 @@
+# Build output & deps
+.next/
+node_modules/
+coverage/
+playwright-report/
+test-results/
+next-env.d.ts
+package-lock.json
+
+# Prose is maintained by hand; prettier's markdown table rewrapping adds noise
+*.md

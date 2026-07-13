@@ -1,6 +1,6 @@
 # PeelPrep — Route Map
 
-Status: **Proposed (Phase 0 planning)**.
+Status: **Approved 2026-07-13.**
 
 Conventions:
 

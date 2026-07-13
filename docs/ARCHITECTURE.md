@@ -1,6 +1,6 @@
 # PeelPrep — System Architecture
 
-Status: **Proposed (Phase 0 planning)** — awaiting approval.
+Status: **Approved 2026-07-13.**
 Companion documents: [DATABASE.md](./DATABASE.md), [ROUTES.md](./ROUTES.md), [AI_ARCHITECTURE.md](./AI_ARCHITECTURE.md), [SECURITY.md](./SECURITY.md), [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md).
 
 Every decision below is derived from [PRODUCT_SPEC.md](./PRODUCT_SPEC.md) and targets a **launchable beta**, not the full future platform. Deferred capabilities are listed explicitly at the end.
