@@ -57,6 +57,7 @@ Postgres fixed-window limiter (`hit_rate_limit()`, DATABASE.md §2) — adequate
 | uploads | 20 / hour |
 | export | 1 / day |
 | account deletion attempts | 3 / day |
+| (8B) media upload URLs + delivery analyses | 10 / day each (proposed) |
 
 Plus the **usage ledger** (AI_ARCHITECTURE.md §8) for plan quotas — limits are enforced before any model call, atomically. IPs are stored only as salted hashes in rate-limit keys. Free-tier farming pressure is reduced by email verification + per-IP signup limits (accepted residual risk, see IMPLEMENTATION_PLAN §Risks).
 
@@ -69,13 +70,13 @@ Plus the **usage ledger** (AI_ARCHITECTURE.md §8) for plan quotas — limits ar
 
 ## 9. Consent & data use
 
-- `user_consents` records versioned grants/revocations for: ToS, privacy policy (both required at signup), `outcome_research_optin` (**default off**; controls whether anonymized outcome data may inform system-wide prediction improvements — never model training), `marketing_emails` (future).
+- `user_consents` records versioned grants/revocations for: ToS, privacy policy (both required at signup), `outcome_research_optin` (**default off**; controls whether anonymized outcome data may inform system-wide prediction improvements — never model training), `marketing_emails` (future), and — Phase 8B — the five separate Video Delivery Analysis consents: `vda_camera`, `vda_microphone`, `vda_recording`, `vda_media_upload`, `vda_ai_analysis` (all default off; see §13).
 - Managed in `/settings`; revocation takes effect immediately; consent changes are audit-logged. No user content is used to train models, full stop, in the beta; any future change requires new explicit consent (spec).
 - Outcome forms snapshot the active consent (`outcomes.research_optin_snapshot`) so later revocation is honored historically.
 
 ## 10. Audit, export, deletion
 
-- **Audit (`audit_logs`):** written server-side (service role) for: auth-sensitive changes, document upload/delete, interview delete, export requests, account-deletion requests, subscription changes (webhook), consent changes, future admin actions. Metadata is ids/counters only — never content. Rows survive account deletion anonymized (`user_id` → null).
+- **Audit (`audit_logs`):** written server-side (service role) for: auth-sensitive changes, document upload/delete, interview delete, export requests, account-deletion requests, subscription changes (webhook), consent changes, future admin actions, and — Phase 8B — `media.upload`, `media.delete`, `media.playback_url_issued`, `transcript.delete`, `delivery_metrics.delete`, `delivery_feedback.delete`, `vda.consent.granted/revoked`. Metadata is ids/counters only — never content. Rows survive account deletion anonymized (`user_id` → null).
 - **Export (`/api/export`):** authenticated, rate-limited (1/day), assembles a complete JSON archive of the user's rows (profile, interviews + all children, documents metadata, stories, outcomes, consents, usage summary) plus signed URLs for uploaded files; stored in the private `exports` bucket (7-day expiry) and returned via signed URL. Audit-logged.
 - **Deletion:** document / interview / account flows exactly as DATABASE.md §9 (hard delete, cascades, storage purge, Stripe cancel, anonymized audit skeleton). Account deletion requires re-authentication + typed confirmation phrase.
 
@@ -93,3 +94,19 @@ Plus the **usage ledger** (AI_ARCHITECTURE.md §8) for plan quotas — limits ar
 - Limit tests: concurrent reservation race (two parallel requests, limit 1 → exactly one succeeds); refund on provider failure.
 - Deletion tests: cascade completeness (no orphan rows/objects), export-then-delete round trip.
 - E2E golden path runs with mock provider and asserts no secret strings ever appear in HTML payloads.
+- (Phase 8B) Media tests: consent-gating matrix, no-raw-media-on-the-wire assertion, temp-media sweeper, per-artifact deletion, prohibited-claims linter — see §13 and IMPLEMENTATION_PLAN Phase 8B.
+
+## 13. Video Delivery Analysis media security (Phase 8B — planned)
+
+The most sensitive data class in the product: recordings of a person's face and voice. Everything here is designed before any code exists, and the feature is optional end-to-end — declining it (or lacking a camera) costs nothing in core functionality or readiness score.
+
+- **Permissions & consent are two different layers, both required.** Browser camera/microphone permission prompts are preceded by an in-product explainer stating what is measured and what is never done (no facial recognition, no identity matching, no emotion detection). Separately, five durable, individually revocable consents gate each capability: `vda_camera`, `vda_microphone`, `vda_recording`, `vda_media_upload` (**any** media leaving the device — temporary transcription uploads and explicit saves alike), `vda_ai_analysis`. Media and analysis rows snapshot the acknowledgment timestamps in force at capture time. Consent withdrawal takes effect immediately for all future capture/processing; it does not silently delete existing artifacts — the user is shown their existing recordings and offered one-click deletion at withdrawal time.
+- **Local-first processing.** Face/pose landmark models run in browser web workers; raw video never leaves the device unless the user explicitly chooses "save recording." Only Zod-validated aggregate numbers cross the network. Audio may be uploaded temporarily for transcription only under `vda_recording` + `vda_media_upload` + `vda_ai_analysis`; a user who declines `vda_media_upload` keeps all media on-device, and feedback falls back to browser-computed aggregates with the missing-transcript limitation stated.
+- **Private media storage.** `media` bucket, owner-prefix storage RLS (DATABASE.md §5b/§8), signed upload URLs issued server-side only after consent + MIME/size/duration validation (magic-byte checked server-side on completion), 60 s signed playback URLs for saved recordings, all issuance audit-logged.
+- **Retention limits & temporary-file cleanup.** `processing_only` media is deleted immediately on job success; a sweeper enforces a 24 h hard cap for failed jobs and tombstones the metadata row (`deleted_at`). Saved recordings persist only until user deletion or account deletion. Retention policy text is user-visible in settings.
+- **Deletion rights** (each independent, each audit-logged): recordings, transcripts, derived delivery metrics, AI delivery feedback, or the entire analysis. Account deletion purges the `media/` prefix and cascades every VDA table (DATABASE.md §9).
+- **Export behavior.** The §10 export includes VDA data: transcripts, delivery metrics, feedback, media metadata, and signed URLs for saved recordings.
+- **Processing-job authorization.** Jobs are created only from owner-authenticated actions; the runner re-validates ownership and consent snapshots before touching any media; job rows are owner-readable (status only), service-written; errors carry sanitized codes, never content.
+- **Rate limits** (§7 table): media upload URLs and delivery analyses capped per day on top of the plan quota (`delivery_feedback` reservations).
+- **Model files & browser workers.** Landmark models (WASM + weights) are self-hosted, same-origin, version-pinned with subresource integrity — never loaded from third-party CDNs; workers are same-origin only; CSP gains the minimum needed for WASM execution (`wasm-unsafe-eval`), scoped and documented; model files receive no user data at build or load time.
+- **Hard prohibitions (verified by design + tests):** no facial recognition or biometric identity matching anywhere; no biometric identity templates created, derived, or stored; no raw landmark frames uploaded or persisted; no emotion/personality/deception/psychological inference (schema-, prompt-, and linter-enforced per AI_ARCHITECTURE.md §10); no training on recordings without a future separate explicit consent — no such training exists in this plan.

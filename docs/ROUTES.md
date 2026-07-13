@@ -6,7 +6,7 @@ Conventions:
 
 - Next.js 16 App Router. Route groups: `(marketing)` public, `(auth)` authentication, `(app)` authenticated product, `(admin)` future admin. Groups do not appear in URLs.
 - **Protection model:** `src/proxy.ts` refreshes the Supabase session cookie on every request and performs *optimistic* redirects (no DB reads). The real boundary is the Data Access Layer: every `(app)` page, Server Action, and API route calls `verifySession()` / `requireUser()` server-side; RLS backstops everything (see SECURITY.md §2–3).
-- Mutations are Server Actions colocated with their route segment (`actions.ts`); route handlers exist only where actions don't fit (webhooks, downloads, long-running generation, export, health).
+- Mutations are Server Actions colocated with their route segment (`actions.ts`); route handlers exist only where actions don't fit (webhooks, downloads, long-running generation, export, health; Phase 8B adds media upload/playback URLs and job polling).
 - All dynamic `params` / `searchParams` are Promises (Next 16) and are awaited; handlers use the `RouteContext<'/path'>` helper.
 
 ---
@@ -71,6 +71,26 @@ Key Server Actions (colocated; all Zod-validated + `requireUser()` + ownership +
 - billing: `createCheckoutSession`, `createPortalSession`
 - settings: `updateProfile`, `updateConsent`, `requestAccountDeletion` (confirm phrase)
 
+### Phase 8B — Video Delivery Analysis screens (planned, optional)
+
+Video mode lives inside the existing practice flow (`/interviews/[id]/practice/[sessionId]`) as client-side steps, plus one settings surface. Typed mode remains the default; every screen below offers a "continue in text mode" path.
+
+| screen / step | purpose |
+|---|---|
+| permission explainer | plain-language explanation of camera/mic use, what is measured, what is never done (no facial recognition, no emotion detection); links to the five VDA consents |
+| device preview | local camera/mic preview, framing + lighting hints; nothing recorded yet |
+| coaching goals | optional pick of focus areas (e.g. pacing, filler words, framing, posture) that steer `delivery_feedback`; skippable |
+| recording countdown | 3-2-1 into a recorded answer for the current question |
+| recorded response review | local playback; re-record (retry) or continue |
+| upload/processing state | shows exactly what is leaving the browser (aggregate metrics; temp audio for transcription; video only if "save" was chosen) with live job status |
+| transcript review | view/correct the transcript before feedback runs |
+| delivery-feedback report | observable strengths/observations, top improvement, setup + speaking advice, practice exercise, uncertainty — all labeled as optional coaching |
+| playback | local playback always; saved recordings via signed URL |
+| save or delete recording | explicit choice; default is **not** saved |
+| privacy & retention controls | in `/settings`: VDA consents, saved recordings list, per-artifact deletion (recording / transcript / metrics / feedback), retention policy text |
+
+Failure & fallback states (each is a designed state, not an error page): permission denied → explainer with typed-mode continue; no camera → audio-only or typed; no microphone → typed; unsupported browser (capability-detected) → typed with an explanation; recording interrupted → keep partial locally, offer retry; upload failure → retry with backoff, nothing lost locally; transcription failure → analysis proceeds `partial` without transcript-based metrics; landmark-analysis failure (no face detected / low light) → audio-and-transcript-only feedback with the limitation stated; AI-feedback failure → metrics still shown, retry offered, usage refunded; user chooses text-only at any point → typed practice, zero VDA data created.
+
 ## 4. API route handlers — `app/api/`
 
 | Route | Methods | Auth | Purpose |
@@ -81,6 +101,16 @@ Key Server Actions (colocated; all Zod-validated + `requireUser()` + ownership +
 | `/api/documents/[id]/download` | GET | session + ownership | issues short-lived signed URL (60 s) and 302-redirects; audit-logged |
 | `/api/export` | POST | session + rate limit (1/day) | assembles full JSON export server-side, stores in `exports` bucket, returns signed URL; audit-logged (SECURITY.md §10) |
 | `/api/health` | GET | none | `{ ok: true, version }` for deploy checks; no secrets, no DB details |
+
+Phase 8B (planned, optional) adds:
+
+| Route | Methods | Auth | Purpose |
+|---|---|---|---|
+| `/api/vda/media/upload-url` | POST | session + `vda_recording` + `vda_media_upload` (+ `vda_ai_analysis` for transcription uploads) + rate limit | validates MIME/size/duration caps, creates the `media_assets` row, returns a short-lived signed **upload** URL (temp transcription audio or explicitly-saved recording) |
+| `/api/vda/jobs/[id]` | GET | session + ownership | job-status polling for the processing screen |
+| `/api/media/[id]/playback` | GET | session + ownership | 60 s signed URL for **saved** recordings; audit-logged |
+
+Analysis creation and aggregate-metrics submission are **not** a route handler: the `submitDeliveryMetrics` Server Action (ownership + `vda_ai_analysis` consent + usage reservation) accepts the Zod-validated browser aggregates, creates `delivery_analyses` (+ `delivery_metrics`), and enqueues `processing_jobs` — consistent with the mutations-are-actions convention. Deletion of VDA artifacts (recording / transcript / metrics / feedback) likewise runs through Server Actions.
 
 Not exposed as public API: everything else goes through Server Actions. There is no unauthenticated AI endpoint anywhere (spec: no unrestricted AI endpoints).
 

@@ -55,7 +55,7 @@ Provider selection: `AI_PROVIDER=mock|anthropic` read once in a server-only fact
 
 ## 3. Models & cost
 
-- Default model: **`claude-opus-4-8`** via `AI_MODEL_DEFAULT`, overridable per task in `src/lib/ai/models.ts` (e.g. cheaper models for short tasks). Per-task tiering (e.g. Sonnet 5 / Haiku 4.5 for turns and checklists) materially changes unit economics and is listed as an **open decision** in IMPLEMENTATION_PLAN §Open decisions — the code makes it a one-line config change either way.
+- Default model: **`claude-opus-4-8`** via `AI_MODEL_DEFAULT`, overridable per task in `src/lib/ai/models.ts` (e.g. cheaper models for short tasks). Per-task tiering (e.g. Sonnet 5 / Haiku 4.5 for turns and checklists) materially changes unit economics; the launch decision — single default model — is **ratified** (IMPLEMENTATION_PLAN §Ratified decisions #1), and the code keeps it a one-line config change if economics warrant revisiting.
 - `src/lib/ai/costs.ts` holds a rate table (USD per MTok input/output per model, dated) used to compute `estimated_cost_cents` on every generation; rates are config, expected to drift, and labeled "estimated" everywhere they render.
 - Per-request `maxOutputTokens` caps by task (sections ~2–4 K, turns ~1 K) bound worst-case spend.
 
@@ -77,6 +77,7 @@ One task = one versioned prompt + one Zod schema + one persistence target.
 | `readiness_advice` | { recommended_action, rationale } — numbers never come from the model | `readiness_scores.recommended_action` |
 | `condensed_brief` | tl;dr summary, last_minute_checklist[] | `brief_sections.condensed_summary` |
 | `checklist_suggestions` | items[]: { label, detail } | `checklist_items` (source=`ai_suggested`) |
+| `delivery_feedback` *(Phase 8B)* | observable_strengths[], delivery_observations[], top_improvement, camera_setup_advice, speaking_advice, practice_exercise, uncertainty_and_limitations — observational coaching language only (§10) | `delivery_analyses.feedback` |
 
 Validation flow: parse with schema → on failure, **one** repair retry (same prompt + validator error appended) → on second failure settle as `validation_failed`, refund usage, surface a retryable error state. Raw invalid output is not persisted.
 
@@ -118,7 +119,7 @@ Never: silent failures, fake content on failure, double-billing (settlement is i
 
 Sequence for every metered feature: **check plan → `reserve_usage()` (atomic, DB) → run provider → `settle_usage()`**. Reservation *before* the provider call is what prevents concurrent overspend (spec: "usage must be reserved atomically before an AI request begins").
 
-Initial plan limits (in `src/lib/billing/plans.ts`; "fair-use" numbers are launch config, tunable without schema changes — flagged for approval in IMPLEMENTATION_PLAN §Open decisions):
+Initial plan limits (in `src/lib/billing/plans.ts`; "fair-use" numbers are launch config, tunable without schema changes — ratified as launch values in IMPLEMENTATION_PLAN §Ratified decisions #2; only the Phase 8B `delivery_feedback` row remains open):
 
 | feature | Free | Plus $19 | Pro $39 |
 |---|---|---|---|
@@ -130,6 +131,7 @@ Initial plan limits (in `src/lib/billing/plans.ts`; "fair-use" numbers are launc
 | `story_suggest` | 0 — AI story mapping is Plus+ per spec (manual story bank is available on Free) | 40 | 100 |
 | active interviews | 1 | unlimited | unlimited |
 | interviewer intelligence | user-provided only, summary | detailed | detailed |
+| `delivery_feedback` *(Phase 8B)* | 0 | 0 | 20 analyses (proposed — open decision) |
 
 `practice_turn` and `readiness_advice` are recorded in the ledger for cost tracking but are not quota-limited in the beta (turns are bounded by session config; advice is generated once per readiness snapshot and cached).
 
@@ -139,4 +141,33 @@ Period: Stripe billing period (paid) / UTC calendar month (free). Remaining usag
 
 - No chain-of-thought / hidden reasoning (spec prohibition; providers are called without any reasoning-capture).
 - No raw prompt/response bodies in `ai_generations` (metadata only); generated content lives solely in domain tables the user can see, edit, export, and delete.
-- No training on user content — provider calls are inference-only; the `outcome_research_optin` consent exists for future anonymized aggregate analysis, not model training (SECURITY.md §9).
+- No training on user content — provider calls are inference-only; the `outcome_research_optin` consent exists for future anonymized aggregate analysis, not model training (SECURITY.md §9). Recordings are additionally never used for training absent a future, separate, explicit consent.
+- *(Phase 8B)* No raw media, no landmark frames, and no biometric data of any kind ever enter an AI call — the model sees only the aggregate numbers in `delivery_metrics` plus the transcript.
+
+## 10. Video Delivery Analysis pipeline (Phase 8B — planned)
+
+Recorded practice answers → observable-measurement aggregation → structured coaching. The language model's role is narrow: **interpret already-aggregated measurements into optional coaching language.** It never sees pixels, audio, or landmarks.
+
+```
+browser                                        server
+──────────────────────────────────────────     ──────────────────────────────
+MediaRecorder capture (local only)
+├─ face/pose landmark models (locally
+│  hosted WASM, web workers)  ──►  aggregate
+│  video metrics (camera-facing %, centering,
+│  head turns, posture, shoulder variation,
+│  movement, sample coverage)      ──────────► Zod-validated metrics submit
+├─ audio buffer → pause/volume aggregates ───► (server action, ownership+consent)
+└─ audio-only temp upload (vda_media_upload) ► TranscriptionProvider job
+                                               ├─ transcript + speaking pace + filler counts
+                                               ├─ temp audio deleted on completion
+                                               └─ delivery_feedback AI task → report
+```
+
+- **TranscriptionProvider** (`src/lib/vda/transcription.ts`): same shape as the AI/research abstractions — `mock` (deterministic fixtures) + one real STT provider (**open decision**; not Anthropic). Transcript lands in `transcripts` with a review screen before feedback runs.
+- **`delivery_feedback` task inputs** (all optional except question + at least one metrics group): interview question, transcript, aggregate video metrics, aggregate audio metrics, user-selected coaching goals, and the `missing_measurements` / `sample_coverage_pct` limitations list. Missing inputs shrink the output — the prompt must not compensate by guessing.
+- **Output schema** (Zod, per §4 table): `observable_strengths[]`, `delivery_observations[]` (issues phrased as observations tied to a measurement, e.g. "camera-facing time was ~40% — an approximation of eye contact"), `top_improvement` (single highest-priority), `camera_setup_advice`, `speaking_advice`, `practice_exercise` (one concrete drill), `uncertainty_and_limitations` (required, non-empty).
+- **Guardrail addendum** (composed with the §4 shared preamble): coaching is optional and based on approximate, incomplete measurements; describe "eye contact" only as approximate camera-facing behavior; never state or imply that the user lacks confidence, is nervous, is dishonest, has a personality trait, will be liked/disliked, or is guaranteed any outcome; never infer emotions, health, disability, or mental state; when a measurement is missing or coverage is low, say so instead of extrapolating. A post-validation **prohibited-claims linter** (test-backed dictionary) rejects outputs that slip through, triggering the standard repair-retry → refund path (§7).
+- **Failure handling** maps onto §7: transcription failure → analysis `partial` (video metrics + setup advice still delivered, limitation stated); landmark failure (no face detected, low coverage) → audio/transcript-only feedback with the limitation stated; AI failure → refund per §7. Every failure leaves the typed-practice flow untouched.
+- **Metering:** `delivery_feedback` reserved per analysis before the AI call (Pro plan per spec; §8 table). `transcription` events are ledger-recorded for cost tracking (STT is a per-minute external cost) under the same reservation.
+- **Never in scope for this task:** readiness scoring (VDA has zero weight), hiring recommendations, comparisons to other users.

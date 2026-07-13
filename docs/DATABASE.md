@@ -1,6 +1,6 @@
 # PeelPrep — Database Design (Supabase PostgreSQL)
 
-Status: **Approved 2026-07-13** — no migrations exist yet; they are created in Phases 2–3.
+Status: **Approved 2026-07-13** — no migrations exist yet; core tables are created in Phases 2–3, and the §5b Video Delivery Analysis tables ship with optional Phase 8B.
 
 Conventions used throughout:
 
@@ -39,12 +39,12 @@ RLS in beta: **no policies granting user access** (service role only) — deny-b
 |---|---|
 | id | uuid PK |
 | user_id | uuid FK → profiles on delete cascade |
-| consent_type | enum: `terms_of_service` \| `privacy_policy` \| `outcome_research_optin` \| `marketing_emails` |
+| consent_type | enum: `terms_of_service` \| `privacy_policy` \| `outcome_research_optin` \| `marketing_emails` — Phase 8B adds `vda_camera` \| `vda_microphone` \| `vda_recording` \| `vda_media_upload` \| `vda_ai_analysis` |
 | version | text not null (document version accepted, e.g. `2026-07-01`) |
 | granted | boolean not null |
 | granted_at / revoked_at | timestamptz |
 
-Unique: `(user_id, consent_type, version)`. Index on `(user_id, consent_type)`. RLS: user select/insert own; revocation updates `revoked_at` on own row. `outcome_research_optin` defaults to absent (= not granted); nothing is trained on user content without it (see SECURITY.md §9).
+Unique: `(user_id, consent_type, version)`. Index on `(user_id, consent_type)`. RLS: user select/insert own; revocation updates `revoked_at` on own row. `outcome_research_optin` defaults to absent (= not granted); nothing is trained on user content without it (see SECURITY.md §9). The five `vda_*` consents (Video Delivery Analysis, Phase 8B) are separate, all default-absent, revocable in settings, and each gate a distinct capability — camera access, microphone access, recording, uploading or saving media (`vda_media_upload` covers **any** media leaving the device, including temporary transcription uploads), and AI analysis (SECURITY.md §13). Media rows additionally snapshot the acknowledgment timestamps in force when a recording was made.
 
 ---
 
@@ -95,7 +95,7 @@ Insert-first with `on conflict do nothing` → replays/retries become no-ops; pr
 | user_id | uuid FK → profiles on delete cascade |
 | organization_id | uuid null | future |
 | interview_id | uuid null FK → interviews on delete set null | kept for spend history even if interview deleted |
-| feature | enum: `brief_generate` \| `section_regenerate` \| `questions_generate` \| `story_suggest` \| `practice_session` \| `practice_turn` \| `answer_feedback` \| `readiness_advice` |
+| feature | enum: `brief_generate` \| `section_regenerate` \| `questions_generate` \| `story_suggest` \| `practice_session` \| `practice_turn` \| `answer_feedback` \| `readiness_advice` — Phase 8B adds `delivery_feedback` \| `transcription` |
 | quantity | int not null default 1 | e.g. number of questions generated |
 | status | enum: `reserved` \| `completed` \| `refunded` \| `failed` |
 | period_start / period_end | timestamptz not null | billing period the event counts against |
@@ -245,7 +245,7 @@ id, user_id, question_id FK on delete cascade, story_id FK on delete cascade, so
 | id / user_id / interview_id | | interview FK on delete cascade |
 | status | enum: `in_progress` \| `completed` \| `abandoned` |
 | config | jsonb not null | length, categories[], difficulty, stage, interviewer_style, focus_weaknesses[] — Zod-validated |
-| modality | enum: `text` (future: `audio`) | audio deferred; column reserves the path per spec |
+| modality | enum: `text` — Phase 8B extends to `audio` \| `video` | recorded modes only; live/real-time coaching stays deferred |
 | summary_feedback | jsonb null | end-of-session structured feedback |
 | started_at / completed_at | timestamptz | |
 
@@ -277,6 +277,63 @@ id, user_id, target_type enum (`brief_section`,`question`,`feedback`,`practice_t
 
 ---
 
+## 5b. Video Delivery Analysis (Phase 8B — planned; ships with the 8B migrations, not the core Phase 3 set)
+
+Recorded-response delivery coaching per PRODUCT_SPEC §Video Delivery Analysis. Design invariants: **aggregate measurements only — no raw face/pose landmark frames are ever uploaded or stored; no biometric identity templates exist anywhere in the schema.** Raw video is uploaded only when the user explicitly chooses to save it; audio may be uploaded temporarily for transcription and is deleted after processing (§9 retention).
+
+### `media_assets` (one row per uploaded/saved media object; browser-only recordings have no row)
+| column | type | notes |
+|---|---|---|
+| id | uuid PK | |
+| user_id | uuid FK → profiles on delete cascade | owner |
+| session_id | uuid FK → practice_sessions on delete cascade | |
+| answer_id | uuid null FK → answers on delete cascade | the recorded response |
+| media_kind | enum: `audio` \| `video` | |
+| storage_path | text not null | `{userId}/{mediaAssetId}/{file}` in the private `media` bucket |
+| mime_type | text not null | allowlist (webm/mp4 video, webm/ogg/m4a audio) |
+| size_bytes | int not null | caps enforced at upload-URL issuance |
+| duration_seconds | numeric null | |
+| processing_status | enum: `pending` \| `processing` \| `processed` \| `failed` | |
+| retention | enum: `processing_only` \| `saved` | `processing_only` = temp transcription input |
+| retention_expires_at | timestamptz null | set for `processing_only` (24 h failure cap; deleted immediately on job success) |
+| recording_consent_at / upload_consent_at | timestamptz not null | `vda_recording` / `vda_media_upload` acknowledgment snapshots at capture/upload time (`vda_media_upload` is required for **every** upload, `processing_only` transcription audio included) |
+| deleted_at | timestamptz null | set when the storage object is destroyed; the metadata-only tombstone lets the UI show "recording deleted" and proves deletion (purged with its parents) |
+| created_at / updated_at | | |
+
+Indexes: `(user_id)`, `(session_id)`, `(retention, retention_expires_at)` (sweeper), `(processing_status)`. RLS: owner select; insert/update/delete via server flows only (consent + validation checked in the DAL first).
+
+### `transcripts`
+id, user_id FK cascade, answer_id FK → answers on delete cascade, session_id FK cascade, source enum (`stt_provider`,`mock`,`user_edited`), provider text null, text text not null, word_count int, language text default 'en', created_at/updated_at. Index `(user_id, created_at)`, `(answer_id)`. RLS: owner select/update (transcript-review corrections)/delete; created by server code after the transcription job.
+
+### `delivery_analyses` (one per recorded answer)
+| column | type | notes |
+|---|---|---|
+| id / user_id / session_id / answer_id | | user/session/answer FKs on delete cascade |
+| media_asset_id | uuid null FK → media_assets on delete set null | survives recording deletion |
+| transcript_id | uuid null FK → transcripts on delete set null | survives transcript deletion (limitation flagged) |
+| status | enum: `pending` \| `metrics_ready` \| `feedback_ready` \| `partial` \| `failed` | |
+| coaching_goals | text[] | user-selected focus areas |
+| missing_measurements | text[] | what could not be measured (feeds uncertainty framing) |
+| analysis_consent_at | timestamptz not null | `vda_ai_analysis` acknowledgment snapshot |
+| feedback | jsonb null | validated `delivery_feedback` output (AI_ARCHITECTURE.md §10) |
+| ai_generation_id | uuid null FK on delete set null | |
+| created_at / updated_at | | |
+
+Index `(user_id, created_at)`, `(answer_id)`. RLS: owner select/delete; content written by server code.
+
+### `delivery_metrics` (1:1 with analysis — aggregates only)
+id, user_id, analysis_id unique FK → delivery_analyses on delete cascade, then numeric aggregate columns: camera_facing_pct (approximate; the only "eye contact" measure), frame_centering_pct, head_turns_per_min, posture_stability_score (0–1), shoulder_angle_variation_deg, movement_events_per_min, speaking_pace_wpm, pause_count, avg_pause_ms, longest_pause_ms, filler_word_count, filler_words_per_100, volume_variation_coeff, answer_duration_seconds, sample_coverage_pct (share of frames with valid landmarks — the uncertainty signal), lighting_flag boolean, framing_flag boolean, created_at.
+RLS: owner select/delete. Computation split (canonical across docs): video-derived values and the pause/volume aggregates are computed **in the browser** (workers / audio buffer) and submitted through the Zod-validated `submitDeliveryMetrics` server action — self-reported by design, acceptable because they influence only the user's own coaching, never the readiness score, ranking, or any other user (see §6 note). Speaking pace and filler-word counts are derived **server-side** from the transcript after the transcription job.
+
+### `processing_jobs` (async step tracking)
+id, user_id FK cascade, kind enum (`transcription`,`delivery_feedback`), analysis_id FK → delivery_analyses on delete cascade, media_asset_id uuid null FK on delete set null, status enum (`queued`,`running`,`succeeded`,`failed`), attempts smallint default 0, error_code text null (sanitized), started_at / finished_at timestamptz null, created_at/updated_at. Indexes `(status, created_at)`, `(user_id, created_at)`, `(analysis_id)`. RLS: owner **select only** (status polling); rows are created and transitioned by server code that re-validates ownership and consent snapshots before touching any media (SECURITY.md §13).
+
+**Storage:** private `media` bucket; `storage.objects` RLS restricted to the owner's `{userId}/` prefix exactly like `documents`/`exports` (§8.5); uploads go through short-lived signed upload URLs issued server-side after consent + MIME/size validation; playback of saved recordings through 60 s signed URLs. A sweeper script deletes expired `processing_only` objects and tombstones their rows.
+
+**Readiness:** Phase 8B adds **no** readiness component and changes no weights — a maximal score remains achievable with typed practice only (§6).
+
+---
+
 ## 6. Readiness, checklist, outcomes
 
 ### `checklists` / `checklist_items`
@@ -287,7 +344,7 @@ id, user_id, target_type enum (`brief_section`,`question`,`feedback`,`practice_t
 id, user_id, interview_id FK on delete cascade, score smallint not null check (0–100), computed_at timestamptz not null, trigger_event text (what caused the recompute), recommended_action text null (AI-suggested next step — the **numeric score itself is deterministic**, per spec), ai_generation_id uuid null. Index `(interview_id, computed_at desc)`. RLS: owner select; server-written.
 
 ### `readiness_components` (per-snapshot breakdown)
-id, user_id, score_id FK → readiness_scores on delete cascade, component enum: `company_understanding` (15%) \| `role_understanding` (15%) \| `interviewer_context` (10%) \| `stories_prepared` (20%) \| `questions_practiced` (20%) \| `answer_quality` (15%) \| `questions_to_ask` (5%), raw_value numeric not null (0–1), weighted_points numeric not null, explanation text not null (how it was measured). Unique `(score_id, component)`. RLS: owner select; server-written. Weights match the spec exactly; the calculator is pure TypeScript over measurable rows (sections completed, stories linked, answers with feedback, rubric averages, checklist state).
+id, user_id, score_id FK → readiness_scores on delete cascade, component enum: `company_understanding` (15%) \| `role_understanding` (15%) \| `interviewer_context` (10%) \| `stories_prepared` (20%) \| `questions_practiced` (20%) \| `answer_quality` (15%) \| `questions_to_ask` (5%), raw_value numeric not null (0–1), weighted_points numeric not null, explanation text not null (how it was measured). Unique `(score_id, component)`. RLS: owner select; server-written. Weights match the spec exactly; the calculator is pure TypeScript over measurable rows (sections completed, stories linked, answers with feedback, rubric averages, checklist state). **Video Delivery Analysis (Phase 8B) contributes zero weight: no component reads VDA tables, and a 100 score is achievable without ever enabling a camera.**
 
 ### `outcomes` (one per interview)
 id, user_id, interview_id unique FK on delete cascade, completed_on date, difficulty smallint (1–5) null, questions_encountered text null, went_well text null, went_poorly text null, confidence smallint (1–5) null, advanced boolean null, received_offer boolean null, private_notes text null, lessons text null, research_optin_snapshot boolean not null default false (whether `outcome_research_optin` consent was active when recorded), created_at/updated_at. RLS: owner CRUD.
@@ -329,7 +386,7 @@ id uuid PK, user_id uuid null FK → profiles **on delete set null** (rows outli
 2. **Owner policies** use the denormalized `user_id`: `using (user_id = auth.uid())` + `with check (user_id = auth.uid())`. All owned tables get the standard four, or a subset where user writes are disallowed (per-table notes above).
 3. **Server-written tables** (`feedback`, `readiness_scores`, brief section `content`, ledger, generations, audit, webhook events) have select-only user policies or none; writes go through the service-role client or SECURITY DEFINER functions.
 4. **Service role** bypasses RLS and is confined to `src/lib/supabase/admin.ts` (`import 'server-only'`): webhooks, ledger functions, deletion/export flows, seeding.
-5. **Storage RLS** (`storage.objects`): private buckets `documents` and `exports`; policies allow select/insert/delete only when `bucket_id` matches and `(storage.foldername(name))[1] = auth.uid()::text`. Downloads additionally go through short-lived signed URLs issued server-side after a DAL ownership check (defense in depth) — SECURITY.md §5.
+5. **Storage RLS** (`storage.objects`): private buckets `documents`, `exports`, and (Phase 8B) `media`; policies allow select/insert/delete only when `bucket_id` matches and `(storage.foldername(name))[1] = auth.uid()::text`. Downloads additionally go through short-lived signed URLs issued server-side after a DAL ownership check (defense in depth) — SECURITY.md §5.
 6. **Organizations:** deliberately no user-facing policies in beta. Org features later expand access by *adding* policies — never by loosening owner policies.
 7. **Tests:** RLS integration tests (two users + anon client) assert cross-user reads/writes fail on every table — IMPLEMENTATION_PLAN Phase 3.
 
@@ -342,11 +399,14 @@ id uuid PK, user_id uuid null FK → profiles **on delete set null** (rows outli
 | Action | Behavior |
 |---|---|
 | Delete document | Confirm dialog → remove storage object → delete row (cascades `interview_documents` and `document_extract` sources) → audit entry (ids only). Brief sections that cited the extract show a "source removed" state. |
-| Delete interview | Confirm dialog lists what is removed: brief + sections, questions, links, practice sessions/turns/answers/feedback, checklist, readiness, outcome, interview-scoped sources — all via FK cascade. Reusable documents and the story bank **survive**. `usage_events` / `ai_generations` keep rows with `interview_id` nulled (spend history is not user content). Audit entry written. |
+| Delete interview | Confirm dialog lists what is removed: brief + sections, questions, links, practice sessions/turns/answers/feedback, checklist, readiness, outcome, interview-scoped sources — and (8B) recordings, transcripts, and delivery analyses — all via FK cascade, **after** the flow first destroys any `media` bucket objects belonging to the interview's practice sessions (saved recordings and pending temp audio), so no face/voice object is ever orphaned in storage. Reusable documents and the story bank **survive**. `usage_events` / `ai_generations` keep rows with `interview_id` nulled (spend history is not user content). Audit entry written. |
 | Archive interview | Non-destructive alternative (`status = archived`); frees the free-tier "active" slot. |
-| Delete account | Re-auth + confirm phrase → server flow: cancel Stripe subscription immediately → delete storage prefixes (`documents/`, `exports/` under the user id) → `auth.admin.deleteUser(id)` → `profiles` cascade removes **all** owned rows; `audit_logs.user_id` set null (anonymized skeleton rows remain: action + timestamp only); Stripe retains its own financial records as legally required. Final audit entry written before deletion. |
+| Delete recording (8B) | Storage object destroyed immediately → `media_assets` row tombstoned (`deleted_at`, metadata only — proves deletion, purged with its parents); transcript, metrics, and feedback are unaffected and remain individually deletable. Audit entry. |
+| Delete transcript (8B) | Hard delete of the `transcripts` row; `delivery_analyses.transcript_id` nulls and the analysis gains a "transcript removed" limitation. Audit entry. |
+| Delete delivery metrics / feedback (8B) | Hard delete of the `delivery_metrics` row / null the `feedback` column; "delete entire analysis" removes the `delivery_analyses` row and cascades metrics + jobs. Audit entry. |
+| Delete account | Re-auth + confirm phrase → server flow: cancel Stripe subscription immediately → delete storage prefixes (`documents/`, `exports/`, and 8B `media/` under the user id) → `auth.admin.deleteUser(id)` → `profiles` cascade removes **all** owned rows (including every 8B table); `audit_logs.user_id` set null (anonymized skeleton rows remain: action + timestamp only); Stripe retains its own financial records as legally required. Final audit entry written before deletion. |
 
-Retention notes: `exports` bucket objects expire after 7 days (cleanup script); `stripe_webhook_events` pruned after 90 days; no other background retention jobs in beta.
+Retention notes: `exports` bucket objects expire after 7 days (cleanup script); `stripe_webhook_events` pruned after 90 days; (8B) `processing_only` media is deleted immediately on job success and hard-capped at 24 h on failure via the sweeper — no other background retention jobs in beta.
 
 ---
 

@@ -186,9 +186,20 @@ Per the spec, the beta ships **no** organization UI, but the schema must not blo
 
 ---
 
-## 8. Explicitly deferred (beta boundary)
+## 8. Planned optional extension: Video Delivery Analysis (Phase 8B)
 
-- Real-time voice/audio and video analysis (practice data model reserves modality/media columns).
+Defined across the planning set (PRODUCT_SPEC §Video Delivery Analysis, DATABASE.md §5b, ROUTES.md §3/§4, AI_ARCHITECTURE.md §10, SECURITY.md §13, IMPLEMENTATION_PLAN.md Phase 8B) but **outside the launch definition** — typed mock interviews remain the first required practice mode, and no core feature or readiness point depends on video.
+
+Architectural additions when the phase runs:
+
+- **Browser-first processing:** face/pose landmark models (locally hosted WASM) run in web workers on the user's device; only Zod-validated aggregate metrics cross the network. Raw video leaves the browser only on an explicit "save recording" choice; audio may be uploaded temporarily for transcription and is deleted after processing.
+- **New folders:** `src/lib/vda/` (metric aggregation contracts, `TranscriptionProvider` abstraction, retention sweeper logic), `src/components/practice/video/` (recording/preview/report UI), `public/models/` (version-pinned landmark models + workers, same-origin).
+- **New storage:** private `media` bucket with the same owner-prefix RLS + signed-URL model as `documents`.
+- Everything else reuses existing plumbing: the usage ledger (`delivery_feedback`), the AI provider layer (one new task), the consent system (five new consent types), audit, export, and deletion flows.
+
+## 9. Explicitly deferred (beta boundary)
+
+- Real-time voice conversations and any **live** video coaching (recorded Video Delivery Analysis is the optional Phase 8B above; the practice data model reserves modality/media columns now). Also permanently out of scope per spec: facial/identity recognition, emotion detection, personality assessment, deception detection, psychological analysis.
 - Automatic scraping of LinkedIn or any login-protected profile; automatic fetching of job-posting URLs (stored but not fetched — SSRF-safe fetcher is future work).
 - Live web research provider (research abstraction ships with `manual` + `mock` implementations only; UI states clearly when current research is unavailable).
 - Server-side PDF rendering (print CSS instead).

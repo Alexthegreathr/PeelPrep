@@ -15,13 +15,14 @@ Status: **Approved 2026-07-13** (all seven open decisions ratified as proposed �
 | 6 | Peel Brief | section-by-section generation, sources UI, notes, print/condensed view |
 | 7 | Questions & stories | predicted questions, story bank, linking, recommendations |
 | 8 | Mock practice & feedback | typed practice sessions, answer evaluation, metering |
+| 8B | *(optional, outside the launch definition)* Video Delivery Analysis | recorded answers → browser-side aggregate metrics + transcript → structured delivery coaching; separate consents; scheduled after Phase 12 unless re-prioritized |
 | 9 | Readiness, checklist, dashboard | deterministic score, checklist, real dashboard, history |
 | 10 | Billing | Stripe checkout/portal/webhooks, plan gates live, upgrade dialogs |
 | 11 | Outcomes, privacy & account | outcome tracking, export, deletion, consent center, settings/profile |
 | 12 | Marketing, demo & launch hardening | public pages, demo seed, a11y pass, E2E, README/deploy docs |
 | 12b | *(optional)* Minimal admin | `/admin` overview + account disable + usage view |
 
-Dependencies are strictly linear except: 7 and 8 both depend on 6’s generation plumbing but not on each other; 12b depends on 10–11.
+Dependencies are strictly linear except: 7 and 8 both depend on 6’s generation plumbing but not on each other; 12b depends on 10–11. Optional Phase 8B depends on 8, 10, and 11, never blocks or precedes any core phase (authentication, intake, briefs, questions/stories, typed practice, answer feedback, readiness, limits/billing all ship first), and runs only on explicit approval.
 
 ## Standing quality gate (every phase, run before stopping)
 
@@ -57,7 +58,7 @@ Every phase ends with: all gate commands passing, failures reported honestly, ch
 
 ## Phase 3 — Core schema & RLS
 
-**Scope:** migrations for every remaining table in DATABASE.md (§§2–7): billing/usage, interview domain, generated content, practice, readiness/checklist/outcomes, AI bookkeeping, audit; all enums, indexes, triggers (`guard_protected_columns`), SECURITY DEFINER functions (`reserve_usage`, `settle_usage`); storage buckets + policies; `plans` seed rows; `supabase gen types typescript` wired to `src/types/database.ts`; RLS integration test suite (two users + anon across **every** table + storage prefixes).
+**Scope:** migrations for every remaining core table in DATABASE.md (§§2–7, excluding §5b — those five tables ship with the Phase 8B migrations): billing/usage, interview domain, generated content, practice, readiness/checklist/outcomes, AI bookkeeping, audit; all enums, indexes, triggers (`guard_protected_columns`), SECURITY DEFINER functions (`reserve_usage`, `settle_usage`); storage buckets + policies; `plans` seed rows; `supabase gen types typescript` wired to `src/types/database.ts`; RLS integration test suite (two users + anon across **every** table + storage prefixes).
 **Dependencies:** Phase 2.
 **Acceptance criteria:** `supabase db reset` builds the entire schema from scratch; RLS suite green (every cross-user access fails, every owner access succeeds); `reserve_usage` race test passes (two concurrent reservations against limit 1 → exactly one wins).
 **Tests:** the RLS suite; ledger function tests (reserve/settle/limit/stale-sweep semantics); trigger guards.
@@ -101,7 +102,34 @@ Every phase ends with: all gate commands passing, failures reported honestly, ch
 **Dependencies:** Phase 7 (questions feed sessions), Phase 5.
 **Acceptance criteria:** complete session on mock provider: config → N questions with follow-ups → end → summary feedback; answer feedback shows all rubric criteria + one top improvement + outline (+ example answer only when facts suffice, otherwise asks for info); limits enforced server-side with upgrade dialog; abandoned sessions resumable or cleanly abandoned.
 **Tests:** turn orchestration (ordering, immutability), feedback schema + insufficient-facts path, metering (sessions + answers), transcript RLS, streak calculation.
-**Deferred:** audio modality (columns exist); adaptive difficulty.
+**Deferred:** audio/video modalities (columns exist — recorded Video Delivery Analysis is optional Phase 8B); adaptive difficulty.
+
+## Phase 8B — Video Delivery Analysis *(optional; outside the launch definition)*
+
+Recorded-response delivery coaching per PRODUCT_SPEC §Video Delivery Analysis. Typed practice (Phase 8) remains the first, required practice mode; users with no camera — or who decline any consent — keep every core feature, and the readiness score is completely unaffected (zero VDA weight). Runs only on explicit approval; default scheduling is after Phase 12 (see Open decisions — Phase 8B).
+
+**Dependencies:** Phase 8 (practice sessions + answers), Phase 10 (Pro plan gating), Phase 11 (consent center, export/deletion flows); confirmed browser-support floor (open decision). New packages at phase start only: a browser landmark library with self-hostable WASM models, an STT provider SDK (TBD), Playwright fake-camera fixtures.
+
+**Hard constraints (from spec — verified by tests, not intentions):** no facial or identity recognition; no emotion detection; no personality, deception, or psychological analysis; no biometric identity templates; aggregate metrics only (never raw landmark frames); raw video uploaded only on explicit save; observational coaching language with stated uncertainty; "eye contact" only ever described as approximate camera-facing behavior.
+
+**Substeps (each independently reviewable, in order):**
+
+1. **Consent & device preview** — five `vda_*` consent types wired into the consent center + per-session acknowledgments; permission-explainer and device-preview screens; every denial path lands in typed mode (ROUTES.md §3 fallback list).
+2. **Local recording** — MediaRecorder capture with countdown, local review/playback, retry; capability detection (unsupported browser → typed); nothing leaves the browser in this substep.
+3. **Transcript & audio metrics** — temp audio-only upload (gated by `vda_media_upload`) → `TranscriptionProvider` (mock + real) → transcript-review screen; pause/volume aggregates computed in the browser, speaking pace + filler-word counts derived server-side from the transcript; `processing_jobs` + polling; temp media deleted on completion (24 h failure cap + sweeper); declining the upload consent yields metrics-only feedback with the limitation stated.
+4. **Landmark aggregation (browser)** — self-hosted WASM face/pose models in web workers; aggregates per DATABASE.md §5b `delivery_metrics` with `sample_coverage_pct` uncertainty; Zod-validated submission; low-coverage and no-face paths degrade gracefully.
+5. **Structured delivery feedback** — `delivery_feedback` task + prohibited-claims linter (AI_ARCHITECTURE.md §10); report UI with uncertainty framing; metered (Pro) with refund-on-failure.
+6. **Optional private recording storage** — explicit save choice (default: not saved) → `media` bucket via signed upload URLs; signed-URL playback; size/duration caps.
+7. **Deletion & retention controls** — per-artifact deletion (recording / transcript / metrics / feedback / whole analysis), settings retention panel, export coverage, audit events (SECURITY.md §13).
+8. **Cross-browser & mobile testing** — device matrix (Chrome, Firefox, Safari desktop; iOS Safari, Android Chrome), permission permutations, low-light/no-face/off-center capture, slow networks.
+
+**Acceptance criteria:** the full flow completes in CI with mock providers and a fixture camera stream; declining any single consent leaves typed practice fully functional; an integration test inspecting the network layer proves **no request ever contains raw video or landmark frames** (only save-recording uploads carry media, and only when chosen); temp media is provably deleted after processing; each artifact deletes independently with no orphans; generated feedback passes the prohibited-claims linter (dictionary covers confidence/nervous/honesty/personality/liked/guaranteed and emotion/health/disability/mental-state terms); readiness output is byte-identical for a user with and without VDA activity; all §13 SECURITY items demonstrably hold.
+
+**Tests:** unit — aggregation math on synthetic landmark series, metric Zod contracts, retention/expiry computation, prohibited-claims linter; integration — consent-gating matrix (5 consents × grant/deny), processing-job authorization (cross-user job access fails), sweeper behavior, RLS on all five new tables + `media` bucket prefixes, export completeness incl. VDA artifacts; E2E — record → transcript review → report → per-artifact delete on a virtual camera; manual — the device matrix above with a written checklist; privacy checks — SECURITY.md §13 walked item-by-item and signed off before the phase closes.
+
+**Commands:** the standing gate, plus `npm run test:e2e -- --grep vda`, plus the documented manual device checklist.
+
+**Explicitly deferred (never in this phase):** real-time live coaching; emotion recognition; facial identity recognition; deception detection; automated hiring recommendations; accessibility judgments; attractiveness or appearance scoring; recording sharing or coach/organization review; model training on recordings.
 
 ## Phase 9 — Readiness, checklist, dashboard, history
 
@@ -162,6 +190,10 @@ Every phase ends with: all gate commands passing, failures reported honestly, ch
 | D11 | Voice/audio "prepare the data model" | `practice_sessions.modality` + `practice_turns.media_path` reserved; no audio code paths in beta. |
 | D12 | Free period vs billing period | Free: UTC calendar month; paid: Stripe billing period. Documented in usage UI. |
 | D13 | Delete-interview "removes … uploaded materials" | Interview-scoped generated content and sources are hard-deleted; **reusable user-level assets (documents, story bank) survive** because they are shared across interviews. The delete dialog states this; users delete documents from the library. |
+| D14 | Spec originally deferred "video delivery analysis" entirely | Recorded **Video Delivery Analysis** is now defined as optional Phase 8B (PRODUCT_SPEC gained a dedicated section; the deferred list now defers only *live* video coaching). It stays outside the launch definition and behind explicit approval. |
+| D15 | VDA vs the readiness score | VDA contributes **zero weight** — no readiness component reads VDA tables, and a 100 score requires no camera. Enforced by a byte-identical-score test in Phase 8B. |
+| D16 | Media deletion vs D5 hard-delete rule | VDA artifacts hard-delete like everything else, with one nuance: destroying a recording's storage object leaves a metadata-only tombstone row (`media_assets.deleted_at`) so the UI and audit trail can prove deletion; tombstones purge with their parents. |
+| D17 | Typed answer rubric scores "confidence"/"authenticity" vs the VDA prohibited-claims rules | The rubric criteria describe observable qualities of **the answer as given** (how confidently and authentically the wording reads) — never psychological judgments about the person. PRODUCT_SPEC §Answer Feedback now states this; `delivery_feedback` (VDA) additionally bans those words about the user entirely, enforced by its prohibited-claims linter. |
 
 ## Major risks
 
@@ -176,7 +208,11 @@ Every phase ends with: all gate commands passing, failures reported honestly, ch
 | **Serverless timeouts on generation** | M / M | one-section-per-request design; resumable queue; turn-level calls are small |
 | **Free-tier abuse / account farming** | M / L | email verification, per-IP signup limits, ledger quotas, rate limits; residual risk accepted for beta |
 | **Postgres-based rate limiting under load** | L / L | fine at beta scale; interface isolates a Redis swap |
-| **Scope creep** (spec is broad) | H / M | phase gates with explicit stop; deferred lists per phase; beta boundary in ARCHITECTURE.md §8 |
+| **Scope creep** (spec is broad) | H / M | phase gates with explicit stop; deferred lists per phase; beta boundary in ARCHITECTURE.md §9 |
+| **(8B) Recording privacy exposure** — face/voice media is the most sensitive class we would hold | L / **critical** | feature optional + consent-gated (×5, default off); browser-first processing; aggregates only; raw video only on explicit save; temp-media sweeper with 24 h cap; per-artifact deletion; no biometric templates; phase closes on a signed §13 privacy checklist |
+| **(8B) Mis-framed feedback** (coaching read as judgment: "you seem nervous") | M / H | schema + prompt guardrails + prohibited-claims linter with test dictionary; observational language tied to measurements; mandatory uncertainty section; "optional coaching" labeling |
+| **(8B) Browser/device fragmentation** (capture APIs, WASM performance, mobile cameras) | M / M | capability detection with typed fallback everywhere; self-hosted version-pinned models; dedicated device-matrix substep; recorded (not live) design tolerates slow devices |
+| **(8B) STT cost/quality** | M / M | provider abstraction + mock; transcript-review screen before feedback; per-day caps + ledger `transcription` cost tracking; provider choice is an open decision |
 | **Legal/product: users treat predictions as promises** | M / M | pervasive "suggestions, not guarantees" copy (questions, readiness, outcome), terms language, no advancement/offer implications anywhere |
 
 ## Ratified decisions (approved 2026-07-13)
@@ -190,3 +226,13 @@ All seven previously open decisions were approved as proposed:
 5. **Admin phase 12b** — optional and outside the launch definition; may ship post-launch.
 6. **Deployment target** — Vercel + hosted Supabase + Stripe live mode.
 7. **Demo strategy** — both: the seed script creates `demo@peelprep.example` with fictional data, and `NEXT_PUBLIC_DEMO_MODE=1` shows the demo banner.
+
+## Open decisions — Phase 8B (Video Delivery Analysis; none block the launch)
+
+1. **Scheduling** — default is after Phase 12 (post-launch); confirm. Pulling it earlier means resequencing so it still follows Phases 10 and 11 (its plan-gating and consent/deletion dependencies) — it can never precede them.
+2. **Transcription provider** — which STT service backs `TranscriptionProvider` (cost/quality/data-retention terms matter; not Anthropic); mock ships regardless.
+3. **Plan gating & quota** — proposed Pro-only, 20 analyses/period + 10 recordings/day (matches the spec's Pro "future video delivery analysis"); confirm numbers and whether Plus gets a taste (e.g. 1/month).
+4. **Saved-recording caps** — proposed 500 MB per user / 3-minute max answer duration; confirm.
+5. **Transcript editing** — proposed: users may correct the transcript before feedback runs (better grounding, small gaming risk — coaching-only output makes this acceptable); confirm.
+6. **Browser-support floor** — proposed: latest Chrome/Edge/Firefox/Safari + iOS Safari 17+ / Android Chrome; older browsers get typed mode only; confirm.
+7. **Landmark library** — which self-hostable WASM face/pose landmark solution to pin (evaluated at phase start for license, model size, and on-device performance; must run fully offline from our origin).

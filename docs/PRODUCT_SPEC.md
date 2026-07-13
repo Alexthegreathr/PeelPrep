@@ -31,7 +31,7 @@ The beta includes:
 The first beta will not include:
 
 - Real-time voice conversations
-- Video delivery analysis
+- Real-time (live) video coaching — recorded Video Delivery Analysis is planned as a separate, optional post-core phase (see the "Video Delivery Analysis" section)
 - Automatic LinkedIn or private-profile scraping
 - Full institutional dashboards
 - Advanced organization administration
@@ -551,6 +551,8 @@ Evaluate answers using:
 - Confidence
 - Completion of the question
 
+These criteria describe observable qualities of the answer as given. They are not psychological judgments about the person.
+
 Feedback should include:
 
 - What worked
@@ -564,6 +566,67 @@ Feedback should include:
 Do not encourage users to memorize AI-written answers word for word.
 
 Do not invent experiences, achievements, measurements, or personal details.
+
+---
+
+## Video Delivery Analysis (optional, later phase)
+
+PeelPrep may add an optional Video Delivery Analysis feature that helps users improve observable interview-delivery behaviors by recording practice answers and receiving coaching.
+
+Always use the term "Video Delivery Analysis." Never call it "video recognition."
+
+Position in the product:
+
+- Typed mock interviews remain the first, required practice mode.
+- Video Delivery Analysis is optional and arrives in a later, clearly separated phase.
+- The initial implementation analyzes recorded responses; it does not provide continuous real-time coaching.
+- Users without cameras, and users who decline recording, keep every core feature.
+- Video practice is never required for a high readiness score.
+
+The feature must not perform:
+
+- Facial recognition or identity recognition
+- Emotion detection
+- Personality assessment
+- Deception detection
+- Psychological analysis
+
+Coaching may be based only on observable signals, such as:
+
+- Approximate camera-facing time ("eye contact" must be described only as an approximation of camera-facing behavior)
+- Head positioning
+- Frame centering
+- Posture stability
+- Shoulder alignment
+- Excessive movement or stiffness
+- Lighting and camera-position issues
+- Visible gestures when reliably detectable
+- Speaking pace
+- Pauses
+- Filler words
+- Answer length
+- Volume consistency
+
+Feedback must never claim that a user:
+
+- Lacks confidence
+- Is nervous
+- Is dishonest
+- Has a certain personality
+- Will be liked or disliked by an interviewer
+- Is guaranteed to perform well
+
+All feedback is framed as optional coaching derived from observable measurements, with uncertainty and measurement limitations stated plainly.
+
+Privacy requirements:
+
+- Prefer browser-side processing for face and pose landmarks when practical.
+- Do not upload raw video unless the user explicitly chooses to save it.
+- Delete temporary recordings after processing according to the documented retention policy.
+- Store aggregate delivery measurements, not raw landmark frames.
+- Never create or store biometric identity templates.
+- Obtain separate consent for camera access, microphone access, recording, uploading or saving recordings, and AI analysis.
+- Let users delete recordings, transcripts, derived delivery metrics, and AI-generated delivery feedback.
 
 ---
 
