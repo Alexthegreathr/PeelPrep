@@ -9,7 +9,7 @@ import { PLANS, type PlanKey } from "@/lib/billing/plans";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Free, Plus ($19/mo), and Pro ($39/mo). Start free; upgrade for deeper analysis and more practice.",
+    "Free, Plus ($24/mo), and Pro ($49/mo). Start free; upgrade for deeper analysis, video delivery coaching, and more practice.",
 };
 
 // Display copy sourced from the same plan config used for enforcement.
@@ -32,10 +32,10 @@ const FEATURES: Record<PlanKey, string[]> = {
   ],
   pro: [
     "Everything in Plus",
-    "Higher fair-use limits",
+    "Video Delivery Analysis — on-device posture & delivery coaching",
     "10 full practice sessions / month",
     "Feedback on 100 answers / month",
-    "Advanced readiness analytics",
+    "Higher fair-use limits & advanced readiness analytics",
     "Priority access to new features",
   ],
 };

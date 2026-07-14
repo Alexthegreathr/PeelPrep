@@ -64,7 +64,7 @@ export const PLANS: Record<PlanKey, PlanEntitlements> = {
   plus: {
     key: "plus",
     name: "Plus",
-    priceCentsMonthly: 1900,
+    priceCentsMonthly: 2400,
     briefDepth: "detailed",
     interviewerIntel: "detailed",
     activeInterviews: null,
@@ -82,7 +82,7 @@ export const PLANS: Record<PlanKey, PlanEntitlements> = {
   pro: {
     key: "pro",
     name: "Pro",
-    priceCentsMonthly: 3900,
+    priceCentsMonthly: 4900,
     briefDepth: "detailed",
     interviewerIntel: "detailed",
     activeInterviews: null,

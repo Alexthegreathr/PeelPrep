@@ -21,7 +21,7 @@ import { PLANS } from "@/lib/billing/plans";
 const PLAN_TAGLINES = {
   free: "Get started: one Peel Brief and one active interview per month.",
   plus: "Unlimited interviews and briefs (fair use), full practice and story tools.",
-  pro: "Higher limits, advanced practice, and readiness analytics.",
+  pro: "Everything in Plus, plus on-device Video Delivery Analysis and higher limits.",
 } as const;
 
 const STEPS = [
