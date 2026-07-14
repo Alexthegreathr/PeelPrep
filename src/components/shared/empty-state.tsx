@@ -24,9 +24,10 @@ export function EmptyState({
     >
       <span
         aria-hidden="true"
-        className="flex size-12 items-center justify-center rounded-full bg-primary/20 text-accent-foreground"
+        className="relative flex size-14 items-center justify-center rounded-full bg-primary/20 text-accent-foreground motion-safe:animate-[float-soft_5s_ease-in-out_infinite]"
       >
-        <svg viewBox="0 0 24 24" className="size-6" fill="none">
+        <span className="absolute -inset-2 rounded-full bg-primary/10 blur-md motion-safe:animate-pulse" />
+        <svg viewBox="0 0 24 24" className="relative size-7" fill="none">
           <path
             d="M5 4c0 8 4 14 13 14 1.5 0 2-.5 2-1.5C20 9 14 4 6.5 4 5.5 4 5 4 5 4Z"
             fill="currentColor"

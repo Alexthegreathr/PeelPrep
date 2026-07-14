@@ -132,30 +132,29 @@ export default async function BriefPage(
       </div>
 
       <div className="flex flex-col gap-6">
-        {data.sections.map((section) => {
-          if (section.status === "skipped") {
-            return (
+        {data.sections.map((section, idx) => {
+          const inner =
+            section.status === "skipped" ? (
               <LockedSection
-                key={section.id}
                 sectionKey={section.section_key as BriefSectionKey}
                 planName={entitlements.name}
               />
-            );
-          }
-          if (section.status === "pending" || section.status === "generating") {
-            return (
+            ) : section.status === "pending" ||
+              section.status === "generating" ? (
               <PendingSection
-                key={section.id}
                 sectionKey={section.section_key as BriefSectionKey}
               />
+            ) : (
+              <BriefSectionCard interviewId={id} section={section} />
             );
-          }
           return (
-            <BriefSectionCard
+            <div
               key={section.id}
-              interviewId={id}
-              section={section}
-            />
+              className="motion-safe:animate-[fade-up_.45s_ease-out_both]"
+              style={{ animationDelay: `${idx * 70}ms` }}
+            >
+              {inner}
+            </div>
           );
         })}
       </div>

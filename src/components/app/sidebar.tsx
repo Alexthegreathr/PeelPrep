@@ -2,6 +2,7 @@ import { Logo } from "@/components/shared/logo";
 import { NavLink } from "@/components/app/nav-link";
 import { SignOutButton } from "@/components/app/sign-out-button";
 import { NAV_ITEMS } from "@/components/app/nav-items";
+import { CommandTrigger } from "@/components/app/command-palette";
 
 /**
  * Desktop sidebar (hidden below `lg`). The mobile equivalent lives in
@@ -13,6 +14,8 @@ export function Sidebar({ userLabel }: { userLabel: string }) {
       <div className="px-1 py-2">
         <Logo href="/dashboard" className="text-sidebar-foreground" />
       </div>
+
+      <CommandTrigger />
 
       <nav aria-label="Primary" className="flex flex-1 flex-col gap-1">
         {NAV_ITEMS.map((item) => (

@@ -17,13 +17,13 @@ export function Logo({
     <Link
       href={href}
       className={cn(
-        "inline-flex items-center gap-2 rounded-md text-xl font-semibold tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "group inline-flex items-center gap-2 rounded-md text-xl font-semibold tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className,
       )}
     >
       <span
         aria-hidden="true"
-        className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground"
+        className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform duration-300 group-hover:motion-safe:scale-110 group-hover:motion-safe:-rotate-12"
       >
         <svg
           viewBox="0 0 24 24"

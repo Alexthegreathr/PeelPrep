@@ -1,8 +1,11 @@
 import { requireUser, getProfile } from "@/lib/auth/dal";
+import { listInterviews } from "@/lib/data/interviews";
 import { Sidebar } from "@/components/app/sidebar";
 import { MobileNav } from "@/components/app/mobile-nav";
 import { Logo } from "@/components/shared/logo";
 import { ToastProvider } from "@/components/ui/toast";
+import { CommandPalette } from "@/components/app/command-palette";
+import { PageTransition } from "@/components/app/page-transition";
 
 /**
  * Authenticated shell. `requireUser()` is the server-side boundary — an
@@ -17,11 +20,20 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const user = await requireUser();
-  const profile = await getProfile();
+  const [profile, interviews] = await Promise.all([
+    getProfile(),
+    listInterviews(),
+  ]);
   const userLabel = profile?.full_name || user.email || "Your account";
+  const paletteInterviews = interviews.map((i) => ({
+    id: i.id,
+    company_name: i.company_name,
+    position_title: i.position_title,
+  }));
 
   return (
     <ToastProvider>
+      <CommandPalette interviews={paletteInterviews} />
       <div className="flex min-h-svh">
         <Sidebar userLabel={userLabel} />
 
@@ -33,7 +45,9 @@ export default async function AppLayout({
           </header>
 
           <main className="flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
-            <div className="mx-auto w-full max-w-5xl">{children}</div>
+            <div className="mx-auto w-full max-w-5xl">
+              <PageTransition>{children}</PageTransition>
+            </div>
           </main>
         </div>
       </div>
