@@ -4,7 +4,10 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 2 : 1,
+  // The dev server compiles routes on demand and the VDA spec loads on-device
+  // vision models; capping workers keeps that contention from tipping timeouts.
+  workers: process.env.CI ? 2 : 3,
   reporter: "list",
   use: {
     baseURL: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",

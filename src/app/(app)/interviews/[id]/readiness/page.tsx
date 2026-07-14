@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Check, Circle, Info, Lightbulb } from "lucide-react";
+import { Check, ChevronDown, Circle, Info, Lightbulb } from "lucide-react";
 
 import { requireUser } from "@/lib/auth/dal";
 import { getInterview } from "@/lib/data/interviews";
@@ -22,6 +22,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Readiness" };
+
+/** Concrete, grounded next step for each not-yet-complete readiness category. */
+const IMPROVE_TIPS: Record<string, string> = {
+  company_understanding:
+    "Generate both company brief sections (overview & priorities) from your sources.",
+  role_understanding:
+    "Generate the role analysis so PeelPrep maps the responsibilities to your background.",
+  interviewer_context:
+    "Add your interviewers, then generate interviewer intelligence from their public professional info.",
+  stories_prepared:
+    "Build your STAR story bank to at least 3 stories you can reuse across questions.",
+  questions_practiced:
+    "Run more mock-interview questions — aim for 5 practiced answers.",
+  answer_quality:
+    "Request feedback on your answers and revise the lower-scoring ones.",
+  questions_to_ask:
+    "Generate a set of thoughtful questions to ask your interviewer.",
+};
 
 export default async function ReadinessPage(
   props: PageProps<"/interviews/[id]/readiness">,
@@ -105,44 +123,71 @@ export default async function ReadinessPage(
             <ul className="mt-4 flex flex-col divide-y">
               {result.components.map((c, idx) => {
                 const full = c.raw >= 0.999;
-                return (
-                  <li
-                    key={c.component}
-                    className="flex items-start gap-3 py-3 text-sm"
-                  >
-                    <span className="mt-0.5">
-                      {full ? (
-                        <Check
-                          className="size-4 text-success"
-                          aria-hidden="true"
-                        />
-                      ) : (
-                        <Circle
-                          className="size-4 text-muted-foreground/50"
-                          aria-hidden="true"
-                        />
-                      )}
-                    </span>
-                    <div className="flex-1">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="font-medium">
-                          {READINESS_COMPONENT_LABELS[c.component]}
-                        </span>
-                        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                          {Math.round(c.weightedPoints)}/{c.weight}
-                        </span>
-                      </div>
-                      <AnimatedBar
-                        value={c.raw}
-                        max={1}
-                        delayMs={idx * 60}
-                        className="my-1.5 h-1"
-                        fillClassName={full ? "bg-success" : "bg-primary"}
-                      />
-                      <span className="text-xs text-muted-foreground">
-                        {c.explanation}
+                const tip = !full ? IMPROVE_TIPS[c.component] : undefined;
+                const body = (
+                  <div className="flex-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-medium">
+                        {READINESS_COMPONENT_LABELS[c.component]}
+                        {tip ? (
+                          <ChevronDown
+                            className="ml-1 inline size-3.5 align-middle text-muted-foreground transition-transform group-open:rotate-180"
+                            aria-hidden="true"
+                          />
+                        ) : null}
+                      </span>
+                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                        {Math.round(c.weightedPoints)}/{c.weight}
                       </span>
                     </div>
+                    <AnimatedBar
+                      value={c.raw}
+                      max={1}
+                      delayMs={idx * 60}
+                      className="my-1.5 h-1"
+                      fillClassName={full ? "bg-success" : "bg-primary"}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {c.explanation}
+                    </span>
+                  </div>
+                );
+                const icon = (
+                  <span className="mt-0.5">
+                    {full ? (
+                      <Check
+                        className="size-4 text-success"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <Circle
+                        className="size-4 text-muted-foreground/50"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </span>
+                );
+                return (
+                  <li key={c.component} className="py-3 text-sm">
+                    {tip ? (
+                      <details className="group">
+                        <summary className="flex cursor-pointer list-none items-start gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+                          {icon}
+                          {body}
+                        </summary>
+                        <p className="mt-2 ml-7 rounded-lg bg-secondary/50 p-3 text-xs text-muted-foreground">
+                          <span className="font-medium text-foreground">
+                            How to raise this:{" "}
+                          </span>
+                          {tip}
+                        </p>
+                      </details>
+                    ) : (
+                      <div className="flex items-start gap-3">
+                        {icon}
+                        {body}
+                      </div>
+                    )}
                   </li>
                 );
               })}

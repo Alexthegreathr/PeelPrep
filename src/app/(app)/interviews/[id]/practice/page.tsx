@@ -83,7 +83,7 @@ export default async function PracticePage(
                 <li key={s.id}>
                   <Link
                     href={`/interviews/${id}/practice/${s.id}`}
-                    className="flex items-center justify-between gap-2 rounded-lg border p-3 text-sm transition-colors hover:bg-secondary/50"
+                    className="flex items-center justify-between gap-2 rounded-lg border p-3 text-sm transition-all hover:-translate-y-0.5 hover:bg-secondary/50 hover:shadow-sm"
                   >
                     <span>
                       <span className="font-medium">

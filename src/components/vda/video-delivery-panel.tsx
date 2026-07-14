@@ -39,6 +39,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/toast";
 import {
   Card,
   CardHeader,
@@ -718,6 +719,7 @@ function DeliveryReport({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
   const feedback = (analysis.feedback ?? {}) as Feedback;
   const metrics = analysis.delivery_metrics[0] ?? null;
 
@@ -727,9 +729,10 @@ function DeliveryReport({
         .filter(([, v]) => v != null)
     : [];
 
-  function remove(fn: () => Promise<void>) {
+  function remove(fn: () => Promise<void>, label: string) {
     startTransition(async () => {
       await fn();
+      toast.success(`${label} deleted`);
       router.refresh();
     });
   }
@@ -753,7 +756,10 @@ function DeliveryReport({
           size="sm"
           disabled={pending}
           onClick={() =>
-            remove(() => deleteAnalysis(interviewId, sessionId, analysis.id))
+            remove(
+              () => deleteAnalysis(interviewId, sessionId, analysis.id),
+              "Report",
+            )
           }
           className="text-destructive hover:text-destructive"
         >
@@ -849,12 +855,14 @@ function DeliveryReport({
               size="sm"
               disabled={pending}
               onClick={() =>
-                remove(() =>
-                  deleteTranscript(
-                    interviewId,
-                    sessionId,
-                    analysis.transcript_id as string,
-                  ),
+                remove(
+                  () =>
+                    deleteTranscript(
+                      interviewId,
+                      sessionId,
+                      analysis.transcript_id as string,
+                    ),
+                  "Transcript",
                 )
               }
             >
@@ -868,12 +876,14 @@ function DeliveryReport({
               size="sm"
               disabled={pending}
               onClick={() =>
-                remove(() =>
-                  deleteRecording(
-                    interviewId,
-                    sessionId,
-                    analysis.media_asset_id as string,
-                  ),
+                remove(
+                  () =>
+                    deleteRecording(
+                      interviewId,
+                      sessionId,
+                      analysis.media_asset_id as string,
+                    ),
+                  "Recording",
                 )
               }
             >

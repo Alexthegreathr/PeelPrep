@@ -22,6 +22,7 @@ import { SectionContent } from "@/components/brief/section-content";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/toast";
 import { sectionToPlainText } from "@/lib/brief/render";
 import { SECTION_TITLES, type BriefSectionKey } from "@/lib/brief/plan";
 import { formatDate } from "@/lib/format";
@@ -57,6 +58,7 @@ export function BriefSectionCard({
   const [showNotes, setShowNotes] = useState(Boolean(section.user_notes));
   const [rating, setRating] = useState<"up" | "down" | null>(null);
   const [, startTransition] = useTransition();
+  const toast = useToast();
   const completed = Boolean(section.completed_at);
 
   async function regenerate() {
@@ -78,6 +80,7 @@ export function BriefSectionCard({
       .writeText(sectionToPlainText(key, content))
       .then(() => {
         setCopied(true);
+        toast.success("Copied to clipboard");
         setTimeout(() => setCopied(false), 1500);
       });
   }

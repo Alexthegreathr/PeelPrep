@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/components/ui/toast";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -37,6 +38,7 @@ export function ConsentToggle({
   const [granted, setGranted] = useState(initial);
   const [pending, startTransition] = useTransition();
   const [failed, setFailed] = useState(false);
+  const toast = useToast();
 
   return (
     <div className="flex flex-col gap-2 py-3">
@@ -59,6 +61,9 @@ export function ConsentToggle({
                 if (res && !res.ok) {
                   setGranted(!next);
                   setFailed(true);
+                  toast.error("Couldn't update this setting.");
+                } else {
+                  toast.success(`${label} ${next ? "enabled" : "disabled"}`);
                 }
               });
             }}

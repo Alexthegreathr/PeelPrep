@@ -74,7 +74,7 @@ function InterviewRowItem({ interview }: { interview: InterviewRow }) {
     <li>
       <Link
         href={`/interviews/${interview.id}`}
-        className="flex items-center justify-between gap-4 rounded-lg border p-4 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex items-center justify-between gap-4 rounded-lg border p-4 transition-all hover:-translate-y-0.5 hover:bg-secondary/50 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <div className="min-w-0">
           <p className="flex flex-wrap items-center gap-2 font-medium">
