@@ -18,6 +18,7 @@ import {
   endPracticeSessionAction,
 } from "@/app/(app)/interviews/[id]/practice/actions";
 import { InterviewerAvatar } from "@/components/practice/interviewer-avatar";
+import { RecordingIndicator } from "@/components/practice/recording-indicator";
 import { getVoiceProvider, type SpeakHandle } from "@/lib/voice/provider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -109,6 +110,7 @@ export function PracticeChat({
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [mockNote, setMockNote] = useState(false);
+  const [answerStream, setAnswerStream] = useState<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const answerStreamRef = useRef<MediaStream | null>(null);
@@ -122,6 +124,7 @@ export function PracticeChat({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       answerStreamRef.current = stream;
+      setAnswerStream(stream);
       chunksRef.current = [];
       const recorder = new MediaRecorder(stream);
       recorder.ondataavailable = (e) => {
@@ -130,6 +133,7 @@ export function PracticeChat({
       recorder.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
         answerStreamRef.current = null;
+        setAnswerStream(null);
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         void transcribe(blob);
       };
@@ -289,6 +293,7 @@ export function PracticeChat({
               if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submit();
             }}
           />
+          {recording ? <RecordingIndicator stream={answerStream} /> : null}
           {mockNote ? (
             <p className="text-xs text-muted-foreground">
               Demo build: this is a mock transcript (not your actual words).
