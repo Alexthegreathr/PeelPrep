@@ -49,6 +49,33 @@ export async function deleteUser(id: string): Promise<void> {
   await adminClient().auth.admin.deleteUser(id);
 }
 
+/** Seed a confirmed interview (status=preparing) with one grounding source. */
+export async function seedPreparingInterview(userId: string): Promise<string> {
+  const a = adminClient();
+  const { data, error } = await a
+    .from("interviews")
+    .insert({
+      user_id: userId,
+      company_name: "Acme Fruit Logistics",
+      position_title: "Senior Engineer",
+      status: "preparing",
+      job_description: "Build reliable produce-logistics systems at scale.",
+      confirmed_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+  if (error || !data) throw error ?? new Error("seed interview failed");
+  await a.from("interview_sources").insert({
+    user_id: userId,
+    interview_id: data.id,
+    kind: "job_description",
+    origin: "user_provided",
+    title: "Job description",
+    content: "Build reliable produce-logistics systems at scale.",
+  });
+  return data.id as string;
+}
+
 type MailpitMessage = {
   ID: string;
   To: { Address: string }[];

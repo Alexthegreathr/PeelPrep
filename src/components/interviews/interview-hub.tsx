@@ -4,6 +4,7 @@ import {
   ExternalLink,
   FileText,
   Pencil,
+  Sparkles,
   Users,
 } from "lucide-react";
 
@@ -191,19 +192,23 @@ export function InterviewHub({
         </div>
       </div>
 
-      <Card className="bg-secondary/30">
-        <CardHeader>
+      <Card>
+        <CardHeader className="border-b">
           <CardTitle className="text-base">Preparation</CardTitle>
           <CardDescription>
-            Your Peel Brief, predicted questions, story bank, practice sessions,
-            and readiness score appear here as you generate them.
+            Turn this interview into a personalized briefing and practice plan.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Generation tools are added in the upcoming phases. Your intake is
-            saved and ready.
-          </p>
+        <CardContent className="flex flex-wrap gap-3 pt-6">
+          <Button asChild>
+            <Link href={`/interviews/${interview.id}/brief`}>
+              <Sparkles aria-hidden="true" /> Peel Brief
+            </Link>
+          </Button>
+          <span className="self-center text-sm text-muted-foreground">
+            Questions, stories, practice, and readiness arrive in the next
+            phases.
+          </span>
         </CardContent>
       </Card>
 

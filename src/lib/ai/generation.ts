@@ -6,6 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   AiError,
   type AiProvider,
+  type AiUsage,
   type StructuredRequest,
   type StructuredResult,
 } from "@/lib/ai/provider";
@@ -25,10 +26,11 @@ import { reserveUsage, settleUsage } from "@/lib/usage/ledger";
 import type { SubscriptionRow } from "@/lib/data/types";
 
 /**
- * Generation service (AI_ARCHITECTURE.md §6): DAL-authenticated callers pass in
- * the built context; this wires reserve → run → settle, one repair retry on
- * schema failure, ai_generations bookkeeping (metadata only — no prompt/response
- * bodies, no reasoning), and the refund policy (§7).
+ * Generation service (AI_ARCHITECTURE.md §6). `runGeneration` is the core AI
+ * call + validation + one repair retry + ai_generations bookkeeping (metadata
+ * only — no prompt/response bodies, no reasoning). `runMeteredGeneration` wraps
+ * it in reserve → run → settle with the refund policy (§7). Multi-section flows
+ * (the Peel Brief) reserve once and call `runGeneration` per section.
  */
 
 type GenStatus =
@@ -66,7 +68,6 @@ async function generateWithRepair<T>(
     return await provider.generateStructured(req);
   } catch (error) {
     if (error instanceof AiError && error.code === "validation_failed") {
-      // One repair retry with the validator hint appended (§4).
       const repaired: StructuredRequest<T> = {
         ...req,
         input: `${req.input}\n\n${REPAIR_MARKER} The previous response failed schema validation. Return ONLY valid JSON matching the schema exactly.`,
@@ -90,7 +91,7 @@ async function writeAiGeneration(entry: {
   costCents?: number;
   durationMs?: number;
   errorCode?: string;
-  usageEventId: string;
+  usageEventId: string | null;
 }): Promise<string | null> {
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
@@ -119,6 +120,103 @@ async function writeAiGeneration(entry: {
   return data.id;
 }
 
+// ── Core (unmetered) generation ──────────────────────────────────────────
+export type CoreSuccess<T> = {
+  ok: true;
+  data: T;
+  generationId: string | null;
+  usage: AiUsage;
+  model: string;
+  provider: string;
+  costCents: number;
+};
+export type CoreFailure = {
+  ok: false;
+  code: GenStatus;
+  message: string;
+  generationId: string | null;
+};
+export type CoreResult<T> = CoreSuccess<T> | CoreFailure;
+
+export async function runGeneration<T>(opts: {
+  userId: string;
+  interviewId?: string | null;
+  task: AiTask;
+  input: string;
+  schema: z.ZodType<T>;
+  usageEventId?: string | null;
+}): Promise<CoreResult<T>> {
+  const {
+    userId,
+    interviewId = null,
+    task,
+    input,
+    schema,
+    usageEventId = null,
+  } = opts;
+
+  const prompt = await upsertPromptVersion(task);
+  const provider = getAiProvider();
+  const model = modelForTask(task);
+  const req: StructuredRequest<T> = {
+    task,
+    system: prompt.system,
+    input,
+    schema,
+    maxOutputTokens: MAX_OUTPUT_TOKENS[task],
+    model,
+  };
+
+  try {
+    const result = await generateWithRepair(provider, req);
+    const costCents = estimateCostCents(result.model, result.usage);
+    const generationId = await writeAiGeneration({
+      userId,
+      interviewId,
+      task,
+      provider: provider.name,
+      model: result.model,
+      promptVersionId: prompt.id,
+      status: "succeeded",
+      inputTokens: result.usage.inputTokens,
+      outputTokens: result.usage.outputTokens,
+      costCents,
+      durationMs: result.durationMs,
+      usageEventId,
+    });
+    return {
+      ok: true,
+      data: result.data,
+      generationId,
+      usage: result.usage,
+      model: result.model,
+      provider: provider.name,
+      costCents,
+    };
+  } catch (error) {
+    const code = error instanceof AiError ? error.code : "unknown";
+    const genStatus = errorToGenStatus(code);
+    const generationId = await writeAiGeneration({
+      userId,
+      interviewId,
+      task,
+      provider: provider.name,
+      model,
+      promptVersionId: prompt.id,
+      status: genStatus,
+      errorCode: code,
+      usageEventId,
+    });
+    return {
+      ok: false,
+      code: genStatus,
+      message: SAFE_MESSAGES[code] ?? SAFE_MESSAGES.unknown,
+      generationId,
+    };
+  }
+}
+
+// ── Metered generation (single-call features) ────────────────────────────
 export type GenerationSuccess<T> = {
   ok: true;
   data: T;
@@ -132,21 +230,16 @@ export type GenerationFailure = {
 };
 export type GenerationResult<T> = GenerationSuccess<T> | GenerationFailure;
 
-export type RunGenerationOptions<T> = {
+export async function runMeteredGeneration<T>(opts: {
   userId: string;
   interviewId?: string | null;
   task: AiTask;
   feature: UsageFeature;
-  /** Metered quantity (e.g. number of questions). Default 1. */
   quantity?: number;
   input: string;
   schema: z.ZodType<T>;
   subscription: SubscriptionRow | null;
-};
-
-export async function runMeteredGeneration<T>(
-  opts: RunGenerationOptions<T>,
-): Promise<GenerationResult<T>> {
+}): Promise<GenerationResult<T>> {
   const {
     userId,
     interviewId = null,
@@ -183,66 +276,34 @@ export async function runMeteredGeneration<T>(
   }
   const usageEventId = reservation.eventId;
 
-  const prompt = await upsertPromptVersion(task);
-  const provider = getAiProvider();
-  const model = modelForTask(task);
-  const req: StructuredRequest<T> = {
+  const core = await runGeneration({
+    userId,
+    interviewId,
     task,
-    system: prompt.system,
     input,
     schema,
-    maxOutputTokens: MAX_OUTPUT_TOKENS[task],
-    model,
-  };
+    usageEventId,
+  });
 
-  try {
-    const result = await generateWithRepair(provider, req);
-    const costCents = estimateCostCents(result.model, result.usage);
-    const generationId = await writeAiGeneration({
-      userId,
-      interviewId,
-      task,
-      provider: provider.name,
-      model: result.model,
-      promptVersionId: prompt.id,
-      status: "succeeded",
-      inputTokens: result.usage.inputTokens,
-      outputTokens: result.usage.outputTokens,
-      costCents,
-      durationMs: result.durationMs,
-      usageEventId,
-    });
+  if (core.ok) {
     await settleUsage(usageEventId, "completed", {
-      inputTokens: result.usage.inputTokens,
-      outputTokens: result.usage.outputTokens,
-      costCents,
-      model: result.model,
-      provider: provider.name,
-      generationId: generationId ?? undefined,
-    });
-    return { ok: true, data: result.data, generationId, usageEventId };
-  } catch (error) {
-    const code = error instanceof AiError ? error.code : "unknown";
-    const genStatus = errorToGenStatus(code);
-    const generationId = await writeAiGeneration({
-      userId,
-      interviewId,
-      task,
-      provider: provider.name,
-      model,
-      promptVersionId: prompt.id,
-      status: genStatus,
-      errorCode: code,
-      usageEventId,
-    });
-    // Refund policy (§7): all handled failure modes refund the reservation.
-    await settleUsage(usageEventId, "refunded", {
-      generationId: generationId ?? undefined,
+      inputTokens: core.usage.inputTokens,
+      outputTokens: core.usage.outputTokens,
+      costCents: core.costCents,
+      model: core.model,
+      provider: core.provider,
+      generationId: core.generationId ?? undefined,
     });
     return {
-      ok: false,
-      code: genStatus,
-      message: SAFE_MESSAGES[code] ?? SAFE_MESSAGES.unknown,
+      ok: true,
+      data: core.data,
+      generationId: core.generationId,
+      usageEventId,
     };
   }
+
+  await settleUsage(usageEventId, "refunded", {
+    generationId: core.generationId ?? undefined,
+  });
+  return { ok: false, code: core.code, message: core.message };
 }

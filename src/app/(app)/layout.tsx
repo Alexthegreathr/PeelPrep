@@ -25,7 +25,7 @@ export default async function AppLayout({
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile header (hidden on desktop where the sidebar shows) */}
-        <header className="flex items-center gap-3 border-b bg-background px-4 py-3 lg:hidden">
+        <header className="flex items-center gap-3 border-b bg-background px-4 py-3 lg:hidden print:hidden">
           <MobileNav userLabel={userLabel} />
           <Logo href="/dashboard" />
         </header>

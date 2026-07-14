@@ -9,7 +9,7 @@ import { NAV_ITEMS } from "@/components/app/nav-items";
  */
 export function Sidebar({ userLabel }: { userLabel: string }) {
   return (
-    <aside className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col gap-6 border-r border-sidebar-border bg-sidebar p-4 text-sidebar-foreground lg:flex">
+    <aside className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col gap-6 border-r border-sidebar-border bg-sidebar p-4 text-sidebar-foreground lg:flex print:hidden">
       <div className="px-1 py-2">
         <Logo href="/dashboard" className="text-sidebar-foreground" />
       </div>
