@@ -22,7 +22,11 @@ export const passwordSchema = z
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, { error: "Enter your password." }),
-  next: z.string().optional(),
+  // `formData.get("next")` is `null` when the hidden field is absent (a direct
+  // visit to /login with no ?next=). `.nullish()` accepts string | null |
+  // undefined — `.optional()` alone rejects null and would fail every plain
+  // login with a hidden, unshown field error (regression guard: auth.test.ts).
+  next: z.string().nullish(),
 });
 
 export const signupSchema = z.object({

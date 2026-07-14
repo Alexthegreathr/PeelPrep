@@ -6,8 +6,14 @@
 </p>
 
 <p>
+  <!--
+    Base the link on {{ .RedirectTo }} (the per-request emailRedirectTo the app
+    passes) rather than {{ .SiteURL }} (a fixed config value), so the link
+    always targets the dev origin/port actually serving the app — never an
+    inactive port. src/lib/auth/site-url.ts computes that origin.
+  -->
   <a
-    href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=%2Flogin%3Fconfirmed%3D1"
+    href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email&next=%2Flogin%3Fconfirmed%3D1"
     >Confirm my email</a
   >
 </p>

@@ -34,7 +34,17 @@ file_size_limit = "50MiB"
 [auth]
 enabled = true
 site_url = "http://localhost:3000"
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+# Auth email links must resolve to whichever local dev origin/port is actually
+# serving the app (localhost or 127.0.0.1, :3000 or the :3001 fallback), so a
+# link is never sent to an inactive port. Supabase only honors redirect targets
+# on this allowlist; src/lib/auth/site-url.ts picks the matching active origin.
+# Production overrides site_url + these URLs with the deployed domain.
+additional_redirect_urls = [
+  "http://localhost:3000/**",
+  "http://localhost:3001/**",
+  "http://127.0.0.1:3000/**",
+  "http://127.0.0.1:3001/**",
+]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10

@@ -7,6 +7,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { checkAuthRateLimit } from "@/lib/security/rate-limit";
 import { CONSENT_VERSIONS } from "@/lib/auth/consent";
 import { sanitizeNextPath } from "@/lib/auth/redirect";
+import { getAuthRedirectBase } from "@/lib/auth/site-url";
 import {
   loginSchema,
   signupSchema,
@@ -14,10 +15,6 @@ import {
   updatePasswordSchema,
 } from "@/lib/validation/auth";
 import { type FormState } from "@/lib/validation/form-state";
-
-function getAppUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-}
 
 const RATE_LIMITED: FormState = {
   status: "error",
@@ -72,7 +69,7 @@ export async function loginAction(
     // Generic message for invalid credentials — no account-existence oracle.
     return {
       status: "error",
-      message: "Incorrect email or password.",
+      message: "Invalid email or password.",
       values: { email },
     };
   }
@@ -110,12 +107,13 @@ export async function signupAction(
     return { ...RATE_LIMITED, values: { email, fullName: fullName ?? "" } };
   }
 
+  const redirectBase = await getAuthRedirectBase();
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: `${getAppUrl()}/auth/confirm`,
+      emailRedirectTo: `${redirectBase}/auth/confirm`,
       data: fullName ? { full_name: fullName } : undefined,
     },
   });
@@ -198,9 +196,12 @@ export async function requestPasswordResetAction(
     return successState;
   }
 
+  // Pass a clean base — the recovery email template appends token_hash, type,
+  // and next. This value becomes {{ .RedirectTo }} in the template.
+  const redirectBase = await getAuthRedirectBase();
   const supabase = await createSupabaseServerClient();
   await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${getAppUrl()}/auth/confirm?type=recovery&next=%2Fupdate-password`,
+    redirectTo: `${redirectBase}/auth/confirm`,
   });
 
   return successState;

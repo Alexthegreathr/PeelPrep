@@ -37,7 +37,11 @@ export function MobileNav({ userLabel }: { userLabel: string }) {
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.href}
-              item={item}
+              href={item.href}
+              label={item.label}
+              icon={
+                <item.icon className="size-4 shrink-0" aria-hidden="true" />
+              }
               onNavigate={() => setOpen(false)}
             />
           ))}

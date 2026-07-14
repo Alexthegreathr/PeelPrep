@@ -16,7 +16,12 @@ export function Sidebar({ userLabel }: { userLabel: string }) {
 
       <nav aria-label="Primary" className="flex flex-1 flex-col gap-1">
         {NAV_ITEMS.map((item) => (
-          <NavLink key={item.href} item={item} />
+          <NavLink
+            key={item.href}
+            href={item.href}
+            label={item.label}
+            icon={<item.icon className="size-4 shrink-0" aria-hidden="true" />}
+          />
         ))}
       </nav>
 

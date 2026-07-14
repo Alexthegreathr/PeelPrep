@@ -4,22 +4,31 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
-import type { NavItem } from "@/components/app/nav-items";
 
+/**
+ * A single primary-nav link with active-state styling (needs the client-only
+ * `usePathname`). The icon is received as an already-rendered element, never as
+ * a component function: a Server Component parent (Sidebar) cannot pass a
+ * function across the client boundary ("Functions cannot be passed directly to
+ * Client Components"), but a rendered ReactNode is fine.
+ */
 export function NavLink({
-  item,
+  href,
+  label,
+  icon,
   onNavigate,
 }: {
-  item: NavItem;
+  href: string;
+  label: string;
+  icon: React.ReactNode;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-  const Icon = item.icon;
+  const active = pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <Link
-      href={item.href}
+      href={href}
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
@@ -30,8 +39,8 @@ export function NavLink({
           : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
       )}
     >
-      <Icon className="size-4 shrink-0" aria-hidden="true" />
-      {item.label}
+      {icon}
+      {label}
     </Link>
   );
 }

@@ -39,6 +39,17 @@ describe("loginSchema", () => {
       loginSchema.safeParse({ email: "a@b.co", password: "" }).success,
     ).toBe(false);
   });
+
+  it("accepts a null `next` — FormData.get returns null, not undefined", () => {
+    // Regression: a plain /login submit (no hidden next field) yields
+    // next=null; `.optional()` alone rejected it, silently failing every login
+    // with a hidden field error. `.nullish()` must accept it.
+    for (const next of [null, undefined, "/dashboard"]) {
+      expect(
+        loginSchema.safeParse({ email: "a@b.co", password: "x", next }).success,
+      ).toBe(true);
+    }
+  });
 });
 
 describe("signupSchema", () => {

@@ -3,8 +3,13 @@
 <p>We received a request to reset the password for your PeelPrep account.</p>
 
 <p>
+  <!--
+    Base the link on {{ .RedirectTo }} (the per-request redirectTo the app
+    passes) rather than {{ .SiteURL }}, so recovery links resolve to the dev
+    origin/port actually serving the app. src/lib/auth/site-url.ts picks it.
+  -->
   <a
-    href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=%2Fupdate-password"
+    href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery&next=%2Fupdate-password"
     >Choose a new password</a
   >
 </p>

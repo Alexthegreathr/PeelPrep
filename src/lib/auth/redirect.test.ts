@@ -42,7 +42,9 @@ describe("sanitizeNextPath", () => {
   it("rejects control characters", () => {
     expect(sanitizeNextPath("/dash\tboard")).toBe(DEFAULT_AUTHENTICATED_PATH);
     expect(sanitizeNextPath("/dash\nboard")).toBe(DEFAULT_AUTHENTICATED_PATH);
-    expect(sanitizeNextPath("/dash\u0000board")).toBe(DEFAULT_AUTHENTICATED_PATH);
+    expect(sanitizeNextPath("/dash\u0000board")).toBe(
+      DEFAULT_AUTHENTICATED_PATH,
+    );
   });
 
   it("rejects overly long paths", () => {
