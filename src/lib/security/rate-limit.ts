@@ -104,7 +104,7 @@ export async function checkAuthRateLimit(
     hitRateLimit(
       `ip:${hashIdentifier(ip)}:${action}`,
       AUTH_WINDOW_SECONDS,
-      AUTH_MAX_HITS,
+      ipMaxHits(),
     ),
     hitRateLimit(
       `email:${hashIdentifier(email)}:${action}`,
@@ -114,4 +114,21 @@ export async function checkAuthRateLimit(
   ]);
 
   return ipAllowed && emailAllowed;
+}
+
+/**
+ * The IP-bucket ceiling. In production this is always AUTH_MAX_HITS. The E2E
+ * suite runs its whole login-heavy flow from a single loopback IP, which would
+ * exhaust a 10/15min shared-IP budget; a strictly non-production, opt-in seam
+ * relaxes ONLY the IP bucket so the per-email anti-credential-stuffing limit is
+ * unchanged. Never honored when NODE_ENV === "production".
+ */
+function ipMaxHits(): number {
+  if (
+    process.env.NODE_ENV !== "production" &&
+    process.env.E2E_RELAX_AUTH_RATE_LIMIT === "1"
+  ) {
+    return 100_000;
+  }
+  return AUTH_MAX_HITS;
 }

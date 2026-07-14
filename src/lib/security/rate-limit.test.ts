@@ -46,4 +46,41 @@ describe("checkAuthRateLimit", () => {
     rpc.mockResolvedValue({ data: null, error: { message: "boom" } });
     await expect(checkAuthRateLimit("signup", "a@b.co")).resolves.toBe(true);
   });
+
+  it("uses the standard IP ceiling by default (no test seam active)", async () => {
+    rpc.mockResolvedValue({ data: true, error: null });
+    await checkAuthRateLimit("login", "a@b.co");
+    const ipCall = rpc.mock.calls.find(([, args]) =>
+      String(args.p_key).startsWith("ip:"),
+    );
+    expect(ipCall?.[1].p_max_hits).toBe(10);
+  });
+
+  it("relaxes ONLY the IP ceiling under the non-production E2E seam", async () => {
+    vi.stubEnv("E2E_RELAX_AUTH_RATE_LIMIT", "1");
+    vi.stubEnv("NODE_ENV", "test");
+    rpc.mockResolvedValue({ data: true, error: null });
+    await checkAuthRateLimit("login", "a@b.co");
+    const calls = Object.fromEntries(
+      rpc.mock.calls.map(([, args]) => [
+        String(args.p_key).split(":")[0],
+        args.p_max_hits,
+      ]),
+    );
+    expect(calls.ip).toBeGreaterThan(10); // IP bucket relaxed
+    expect(calls.email).toBe(10); // per-account limit intact
+    vi.unstubAllEnvs();
+  });
+
+  it("never relaxes the IP ceiling in production", async () => {
+    vi.stubEnv("E2E_RELAX_AUTH_RATE_LIMIT", "1");
+    vi.stubEnv("NODE_ENV", "production");
+    rpc.mockResolvedValue({ data: true, error: null });
+    await checkAuthRateLimit("login", "a@b.co");
+    const ipCall = rpc.mock.calls.find(([, args]) =>
+      String(args.p_key).startsWith("ip:"),
+    );
+    expect(ipCall?.[1].p_max_hits).toBe(10);
+    vi.unstubAllEnvs();
+  });
 });

@@ -31,5 +31,8 @@ export default defineConfig({
     command: "npm run dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
+    // The whole login-heavy suite runs from one loopback IP; relax ONLY the
+    // shared-IP auth limiter for tests (non-production, per-email limit intact).
+    env: { ...process.env, E2E_RELAX_AUTH_RATE_LIMIT: "1" },
   },
 });

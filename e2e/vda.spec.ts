@@ -62,7 +62,9 @@ test.describe("video delivery analysis", () => {
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
-    await expect(page).toHaveURL(/\/dashboard/);
+    // Cold-compile under full-suite parallel load can push the first authed
+    // navigation past the 5s default.
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 20000 });
 
     await page.goto(`/interviews/${interviewId}/practice/${sessionId}`);
 
