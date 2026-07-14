@@ -549,12 +549,39 @@ function Recorder({
             ) : (
               <>
                 <LiveCue on={liveCues.facing} label="Facing camera" />
+                <LiveCue on={liveCues.eyesUp} label="Eyes up" neutralWhenNull />
                 <LiveCue on={liveCues.centered} label="Centered" />
+                <LiveCue
+                  on={
+                    liveCues.distance === null
+                      ? null
+                      : liveCues.distance === "ok"
+                  }
+                  label={
+                    liveCues.distance === "close"
+                      ? "Too close"
+                      : liveCues.distance === "far"
+                        ? "Too far"
+                        : "Good distance"
+                  }
+                  neutralWhenNull
+                />
                 <LiveCue
                   on={liveCues.postureSteady}
                   label="Posture steady"
                   neutralWhenNull
                 />
+                {liveCues.gesture ? (
+                  <span className="rounded-full bg-black/70 px-3 py-1 text-xs font-medium text-white">
+                    <span
+                      className="mr-1.5 inline-block size-2 rounded-full bg-sky-400 align-middle"
+                      aria-hidden="true"
+                    />
+                    {liveCues.gesture === "active"
+                      ? "Gesturing"
+                      : "Hands still"}
+                  </span>
+                ) : null}
                 {!liveCues.faceDetected ? (
                   <span className="rounded-full bg-black/70 px-3 py-1 text-xs text-white/70">
                     No face detected

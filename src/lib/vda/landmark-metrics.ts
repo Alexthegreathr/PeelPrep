@@ -145,6 +145,20 @@ export function aggregateLandmarkFrames(
 }
 
 /**
+ * Classify camera distance from the face-box height (normalized 0–1). A pure
+ * geometric measurement — how much of the frame your head fills — used for the
+ * live "too close / good / too far" framing cue. Not an inference about you.
+ */
+export function framingDistanceBand(
+  faceHeight: number | null,
+): "far" | "ok" | "close" | null {
+  if (faceHeight == null) return null;
+  if (faceHeight < 0.28) return "far";
+  if (faceHeight > 0.62) return "close";
+  return "ok";
+}
+
+/**
  * Extract yaw/pitch/roll (degrees) from a MediaPipe 4×4 facial transformation
  * matrix (column-major, length 16). Used by the browser analyzer; pure so it's
  * testable without the model.

@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
   aggregateLandmarkFrames,
   eulerFromMatrix,
+  framingDistanceBand,
   type LandmarkFrame,
 } from "@/lib/vda/landmark-metrics";
 
@@ -79,6 +80,21 @@ describe("aggregateLandmarkFrames", () => {
     const a = aggregateLandmarkFrames(jittery, 2000);
     expect(a.posture_stability_score).toBeLessThan(0.5);
     expect(a.shoulder_angle_variation_deg).toBeGreaterThan(10);
+  });
+});
+
+describe("framingDistanceBand", () => {
+  it("is null when no face height is known", () => {
+    expect(framingDistanceBand(null)).toBeNull();
+  });
+  it("reads a small face box as too far", () => {
+    expect(framingDistanceBand(0.2)).toBe("far");
+  });
+  it("reads a large face box as too close", () => {
+    expect(framingDistanceBand(0.7)).toBe("close");
+  });
+  it("reads a mid-size face box as good distance", () => {
+    expect(framingDistanceBand(0.45)).toBe("ok");
   });
 });
 
