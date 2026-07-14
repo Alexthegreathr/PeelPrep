@@ -13,6 +13,7 @@ export type DeliveryAnalysisView = {
   coaching_goals: string[];
   missing_measurements: string[];
   feedback: Record<string, unknown> | null;
+  presence_summary: Record<string, unknown> | null;
   created_at: string;
   transcript_id: string | null;
   media_asset_id: string | null;
@@ -29,7 +30,7 @@ export async function getDeliveryAnalyses(
   const { data } = await supabase
     .from("delivery_analyses")
     .select(
-      "id, status, coaching_goals, missing_measurements, feedback, created_at, transcript_id, media_asset_id, delivery_metrics(*), transcripts(id, text)",
+      "id, status, coaching_goals, missing_measurements, feedback, presence_summary, created_at, transcript_id, media_asset_id, delivery_metrics(*), transcripts(id, text)",
     )
     .eq("session_id", sessionId)
     .order("created_at", { ascending: false });

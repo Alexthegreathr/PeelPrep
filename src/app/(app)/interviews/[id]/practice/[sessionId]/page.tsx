@@ -28,14 +28,15 @@ export default async function SessionPage(
   const answerByTurn = new Map(answers.map((a) => [a.turn_id, a]));
   const inProgress = session.status === "in_progress";
 
-  // Video Delivery Analysis is only offered on completed sessions (review mode).
-  const [plan, consents, analyses] = inProgress
-    ? [null, null, []]
-    : await Promise.all([
-        getEffectivePlan(),
-        getConsentState(),
-        getDeliveryAnalyses(sessionId),
-      ]);
+  // Consents are needed in both modes: for voice practice answers (in progress)
+  // and for Video Delivery Analysis (review). Plan + analyses only on review.
+  const consents = await getConsentState();
+  const transcriptionIsMock = isMockTranscription();
+  const [plan, analyses] = inProgress
+    ? [null, []]
+    : await Promise.all([getEffectivePlan(), getDeliveryAnalyses(sessionId)]);
+  const voiceAnswersAvailable =
+    consents.vda_microphone && consents.vda_media_upload;
 
   return (
     <div>
@@ -52,7 +53,13 @@ export default async function SessionPage(
       />
 
       {inProgress ? (
-        <PracticeChat interviewId={id} sessionId={sessionId} turns={turns} />
+        <PracticeChat
+          interviewId={id}
+          sessionId={sessionId}
+          turns={turns}
+          voiceAnswersAvailable={voiceAnswersAvailable}
+          transcriptionIsMock={transcriptionIsMock}
+        />
       ) : (
         <div className="flex flex-col gap-4">
           {session.summary_feedback ? (

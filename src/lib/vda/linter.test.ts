@@ -29,6 +29,9 @@ describe("lintDeliveryText", () => {
     ["you will pass the interview", "outcome-prediction"],
     ["this suggests depression or trauma", "health-inference"],
     ["you appeared emotionally drained", "psychological-inference"],
+    ["you looked calm and composed", "affective-state"],
+    ["you seemed tense throughout", "affective-state"],
+    ["you came across as confident", "affective-state"],
   ])("flags prohibited phrasing: %s", (text, label) => {
     const res = lintDeliveryText(text);
     expect(res.ok).toBe(false);

@@ -10,6 +10,13 @@ const BANNED: { pattern: RegExp; label: string }[] = [
   { pattern: /\bnervous(ness)?\b/i, label: "nervousness" },
   { pattern: /\banxi(ous|ety)\b/i, label: "anxiety" },
   { pattern: /\b(jittery|shaky|fidgety)\b/i, label: "emotional-state" },
+  // Affect words — an inner state must never be attributed from a measurement
+  // (extended for the Phase 14 presence summary; PHASE_14_AVATAR_PRACTICE.md §4).
+  {
+    pattern:
+      /\b(calm|tense|relaxed|composed|poised|uneasy|stressed|comfortable|uncomfortable|confident)\b/i,
+    label: "affective-state",
+  },
   { pattern: /\black(s|ing|ed)?\s+confidence\b/i, label: "lacks-confidence" },
   {
     pattern: /\b(under[- ]?confident|not\s+confident|insecure)\b/i,

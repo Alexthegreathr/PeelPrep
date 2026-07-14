@@ -14,7 +14,8 @@ import {
   type SubmittedMetrics,
 } from "@/lib/vda/metrics";
 import { getTranscriptionProvider } from "@/lib/vda/transcription";
-import { lintDeliveryFeedback } from "@/lib/vda/linter";
+import { lintDeliveryFeedback, lintDeliveryText } from "@/lib/vda/linter";
+import { buildPresenceSummary, presenceSummaryText } from "@/lib/vda/presence";
 
 /**
  * Video Delivery Analysis pipeline (AI_ARCHITECTURE.md §10). The model sees ONLY
@@ -212,9 +213,32 @@ export async function runDeliveryAnalysis(
   }
 
   const missing = missingMeasurements(metrics, Boolean(transcriptText));
+
+  // Deterministic neutral presence summary (PHASE_14 §4). Built from the
+  // observable measurements only, never an inner-state judgment. Linted as
+  // defense-in-depth; dropped (not fabricated) if it somehow trips the linter.
+  const presence = buildPresenceSummary({
+    ...metrics,
+    speaking_pace_wpm: derived.speaking_pace_wpm,
+    filler_words_per_100:
+      metrics.answer_duration_seconds && transcriptText
+        ? (derived.filler_word_count /
+            Math.max(
+              1,
+              transcriptText.trim().split(/\s+/).filter(Boolean).length,
+            )) *
+          100
+        : null,
+  });
+  const presenceClean = lintDeliveryText(presenceSummaryText(presence)).ok;
+
   await admin
     .from("delivery_analyses")
-    .update({ status: "metrics_ready", missing_measurements: missing })
+    .update({
+      status: "metrics_ready",
+      missing_measurements: missing,
+      presence_summary: presenceClean ? (presence as unknown as Json) : null,
+    })
     .eq("id", analysis.id);
 
   // ── Delivery feedback (metered) + prohibited-claims linter ─────────────

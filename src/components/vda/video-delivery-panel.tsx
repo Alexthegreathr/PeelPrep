@@ -21,6 +21,10 @@ import {
   type VdaResult,
 } from "@/app/(app)/interviews/[id]/practice/[sessionId]/vda-actions";
 import { computeAudioAggregates } from "@/components/vda/audio-metrics";
+import {
+  VideoPresenceSampler,
+  type VideoAggregates,
+} from "@/components/vda/video-metrics";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +55,19 @@ type Feedback = {
   speaking_advice?: string;
   practice_exercise?: string;
   uncertainty_and_limitations?: string;
+};
+
+type PresenceBandView = {
+  key: string;
+  label: string;
+  value: string;
+  status: "in_range" | "worth_a_look" | "unmeasured";
+  note: string;
+};
+type PresenceSummaryView = {
+  bands?: PresenceBandView[];
+  measuredCount?: number;
+  disclaimer?: string;
 };
 
 const METRIC_LABELS: Record<string, string> = {
@@ -173,6 +190,8 @@ function Recorder({
   const chunksRef = useRef<Blob[]>([]);
   const startedAtRef = useRef<number>(0);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const samplerRef = useRef<VideoPresenceSampler | null>(null);
+  const videoAggRef = useRef<VideoAggregates | null>(null);
 
   const [state, setState] = useState<RecState>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -190,6 +209,7 @@ function Recorder({
     return () => {
       stopStream();
       if (tickRef.current) clearInterval(tickRef.current);
+      if (samplerRef.current) samplerRef.current.finalize(performance.now());
       if (playbackUrl) URL.revokeObjectURL(playbackUrl);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -245,6 +265,13 @@ function Recorder({
     recorder.start();
     recorderRef.current = recorder;
     startedAtRef.current = performance.now();
+    // Sample the live preview for model-free presence metrics (stays in-tab).
+    if (videoRef.current) {
+      const sampler = new VideoPresenceSampler(videoRef.current);
+      sampler.start(startedAtRef.current);
+      samplerRef.current = sampler;
+    }
+    videoAggRef.current = null;
     setElapsed(0);
     setState("recording");
     tickRef.current = setInterval(() => {
@@ -258,6 +285,11 @@ function Recorder({
     if (tickRef.current) {
       clearInterval(tickRef.current);
       tickRef.current = null;
+    }
+    // Finalize presence sampling BEFORE tearing down the preview stream.
+    if (samplerRef.current) {
+      videoAggRef.current = samplerRef.current.finalize(performance.now());
+      samplerRef.current = null;
     }
     if (recorderRef.current && recorderRef.current.state !== "inactive") {
       recorderRef.current.stop();
@@ -282,21 +314,22 @@ function Recorder({
     setResult(null);
     try {
       const audio = await computeAudioAggregates(recordedBlob, elapsed);
-      // Video-derived metrics require an on-device landmark model, which isn't
-      // loaded in this build — submit them as unmeasured (null) so the report
-      // is transparent about coverage rather than inventing values.
-      const metrics = {
-        ...audio,
-        camera_facing_pct: null,
-        frame_centering_pct: null,
-        head_turns_per_min: null,
-        posture_stability_score: null,
-        shoulder_angle_variation_deg: null,
+      // Model-free video presence metrics (movement, lighting, framing) computed
+      // on-device from the preview. Camera-facing and posture stay null — they
+      // need the documented landmark model — so the report is honest about
+      // coverage rather than inventing values.
+      const video = videoAggRef.current ?? {
         movement_events_per_min: null,
-        sample_coverage_pct: null,
+        frame_centering_pct: null,
         lighting_flag: false,
         framing_flag: false,
+        sample_coverage_pct: null,
+        camera_facing_pct: null,
+        posture_stability_score: null,
+        shoulder_angle_variation_deg: null,
+        head_turns_per_min: null,
       };
+      const metrics = { ...audio, ...video };
       const res = await submitDeliveryMetrics(interviewId, sessionId, {
         metrics,
         coachingGoals: [],
@@ -540,6 +573,10 @@ function DeliveryReport({
         </Button>
       </div>
 
+      <PresenceSummaryBlock
+        summary={analysis.presence_summary as PresenceSummaryView | null}
+      />
+
       {feedback.uncertainty_and_limitations ||
       analysis.missing_measurements.length ? (
         <Alert className="mb-3">
@@ -657,6 +694,48 @@ function DeliveryReport({
           ) : null}
         </div>
       )}
+    </div>
+  );
+}
+
+function PresenceSummaryBlock({
+  summary,
+}: {
+  summary: PresenceSummaryView | null;
+}) {
+  const bands = summary?.bands ?? [];
+  if (bands.length === 0) return null;
+  const dot: Record<PresenceBandView["status"], string> = {
+    in_range: "bg-emerald-500",
+    worth_a_look: "bg-amber-500",
+    unmeasured: "bg-muted-foreground/40",
+  };
+  return (
+    <div className="mb-3 rounded-lg border bg-secondary/40 p-3">
+      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Presence snapshot
+      </p>
+      <ul className="flex flex-col gap-1.5">
+        {bands.map((b) => (
+          <li key={b.key} className="flex items-start gap-2 text-sm">
+            <span
+              className={`mt-1.5 size-2 shrink-0 rounded-full ${dot[b.status]}`}
+              aria-hidden="true"
+            />
+            <span>
+              <span className="font-medium">{b.label}:</span> {b.value}
+              {b.status !== "unmeasured" ? (
+                <span className="text-muted-foreground"> — {b.note}</span>
+              ) : null}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {summary?.disclaimer ? (
+        <p className="mt-2 text-xs italic text-muted-foreground">
+          {summary.disclaimer}
+        </p>
+      ) : null}
     </div>
   );
 }

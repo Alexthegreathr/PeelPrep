@@ -513,6 +513,7 @@ export type Database = {
           id: string;
           media_asset_id: string | null;
           missing_measurements: string[];
+          presence_summary: Json | null;
           session_id: string;
           status: Database["public"]["Enums"]["delivery_analysis_status"];
           transcript_id: string | null;
@@ -529,6 +530,7 @@ export type Database = {
           id?: string;
           media_asset_id?: string | null;
           missing_measurements?: string[];
+          presence_summary?: Json | null;
           session_id: string;
           status?: Database["public"]["Enums"]["delivery_analysis_status"];
           transcript_id?: string | null;
@@ -545,6 +547,7 @@ export type Database = {
           id?: string;
           media_asset_id?: string | null;
           missing_measurements?: string[];
+          presence_summary?: Json | null;
           session_id?: string;
           status?: Database["public"]["Enums"]["delivery_analysis_status"];
           transcript_id?: string | null;

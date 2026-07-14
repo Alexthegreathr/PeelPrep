@@ -11,7 +11,7 @@ import {
   type TestUser,
 } from "./helpers";
 import { runDeliveryAnalysis } from "@/lib/vda/analysis";
-import { lintDeliveryFeedback } from "@/lib/vda/linter";
+import { lintDeliveryFeedback, lintDeliveryText } from "@/lib/vda/linter";
 import { gatherReadinessInputs } from "@/lib/readiness/compute";
 import { computeReadiness } from "@/lib/readiness/calculator";
 import { READINESS_WEIGHTS } from "@/lib/readiness/calculator";
@@ -116,13 +116,24 @@ describe.skipIf(!integrationEnabled)("video delivery analysis", () => {
 
       const { data: row } = await admin()
         .from("delivery_analyses")
-        .select("status, feedback")
+        .select("status, feedback, presence_summary")
         .eq("id", res.analysisId)
         .single();
       expect(row?.status).toBe("feedback_ready");
       expect(
         lintDeliveryFeedback(row?.feedback as Record<string, string[]>).ok,
       ).toBe(true);
+
+      // Presence summary (Phase 14) stored, built from real metrics, linter-clean.
+      const presence = row?.presence_summary as {
+        bands?: { label: string; value: string; note: string }[];
+        measuredCount?: number;
+      } | null;
+      expect((presence?.measuredCount ?? 0) > 0).toBe(true);
+      const presenceText = (presence?.bands ?? [])
+        .map((b) => `${b.label} ${b.value} ${b.note}`)
+        .join("\n");
+      expect(lintDeliveryText(presenceText).ok).toBe(true);
 
       // The metered delivery_feedback usage settled as completed.
       const { data: usage } = await admin()

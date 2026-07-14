@@ -85,7 +85,7 @@ export async function makeUserPro(userId: string): Promise<void> {
   if (error) throw error;
 }
 
-/** Grant the four VDA consents needed to record + analyze (version-current). */
+/** Grant all five VDA consents (record, analyze, and voice answers). */
 export async function grantVdaConsents(userId: string): Promise<void> {
   const version = "2026-07-13";
   const now = new Date().toISOString();
@@ -93,6 +93,7 @@ export async function grantVdaConsents(userId: string): Promise<void> {
     "vda_camera",
     "vda_microphone",
     "vda_recording",
+    "vda_media_upload",
     "vda_ai_analysis",
   ].map((consent_type) => ({
     user_id: userId,

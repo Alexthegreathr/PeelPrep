@@ -94,6 +94,12 @@ test.describe("video delivery analysis", () => {
       page.getByText(/approximate|measurements|on-device/i).first(),
     ).toBeVisible();
 
+    // The neutral presence snapshot renders with its non-inference disclaimer.
+    await expect(page.getByText(/presence snapshot/i)).toBeVisible();
+    await expect(
+      page.getByText(/not a measure of confidence, emotion, or personality/i),
+    ).toBeVisible();
+
     // The privacy guarantee: no raw media left the browser.
     expect(uploadRequests, "no media upload requests").toEqual([]);
     expect(bigBodies, "no large request bodies").toEqual([]);
