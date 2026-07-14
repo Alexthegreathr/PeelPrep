@@ -213,8 +213,11 @@ export function InterviewHub({
           <Button asChild variant="outline">
             <Link href={`/interviews/${interview.id}/stories`}>Story bank</Link>
           </Button>
+          <Button asChild variant="outline">
+            <Link href={`/interviews/${interview.id}/practice`}>Practice</Link>
+          </Button>
           <span className="self-center text-sm text-muted-foreground">
-            Practice and readiness arrive in the next phases.
+            Readiness scoring arrives in the next phase.
           </span>
         </CardContent>
       </Card>

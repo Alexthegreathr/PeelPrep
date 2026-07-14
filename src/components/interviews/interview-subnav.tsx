@@ -8,6 +8,7 @@ const TABS = [
   { key: "brief", label: "Peel Brief", path: "brief" },
   { key: "questions", label: "Questions", path: "questions" },
   { key: "stories", label: "Stories", path: "stories" },
+  { key: "practice", label: "Practice", path: "practice" },
 ] as const;
 
 export type InterviewTab = (typeof TABS)[number]["key"];
