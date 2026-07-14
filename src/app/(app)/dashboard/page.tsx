@@ -6,22 +6,26 @@ import {
   Flame,
   Gauge,
   Lightbulb,
+  Video,
 } from "lucide-react";
 
 import { requireUser, getProfile } from "@/lib/auth/dal";
 import { listUpcomingInterviews } from "@/lib/data/interviews";
+import { getEffectivePlan } from "@/lib/data/subscription";
 import { currentScore } from "@/lib/readiness/compute";
 import {
   getUsageMeters,
   getPracticeStreak,
   getRecentBriefs,
   getLatestRecommendedAction,
+  getLatestCompletedSession,
   findOutcomePrompt,
 } from "@/lib/data/dashboard";
 import { PageHeader } from "@/components/app/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { AddInterviewButton } from "@/components/interviews/add-interview-button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { formatInterviewTime, relativeTime } from "@/lib/format";
 import { STATUS_LABELS } from "@/lib/interviews/labels";
@@ -53,13 +57,37 @@ export default async function DashboardPage() {
     );
   }
 
-  const [score, nextAction, meters, streak, recentBriefs] = await Promise.all([
-    currentScore(next.id, user.id),
-    getLatestRecommendedAction(next.id),
-    getUsageMeters(user.id),
-    getPracticeStreak(user.id),
-    getRecentBriefs(user.id),
-  ]);
+  const [score, nextAction, meters, streak, recentBriefs, plan, lastSession] =
+    await Promise.all([
+      currentScore(next.id, user.id),
+      getLatestRecommendedAction(next.id),
+      getUsageMeters(user.id),
+      getPracticeStreak(user.id),
+      getRecentBriefs(user.id),
+      getEffectivePlan(),
+      getLatestCompletedSession(user.id),
+    ]);
+
+  // Direct entry point to Video Delivery Analysis (Pro; lives on a completed
+  // session's review page). Route by plan + whether a completed session exists.
+  const isPro = plan.planKey === "pro";
+  const delivery = !isPro
+    ? {
+        href: "/billing",
+        cta: "Unlock with Pro",
+        desc: "Optional, on-device feedback on your delivery — pacing, framing, posture, and eye contact. A Pro feature.",
+      }
+    : lastSession
+      ? {
+          href: `/interviews/${lastSession.interviewId}/practice/${lastSession.id}#delivery-analysis`,
+          cta: "Analyze my delivery",
+          desc: "Review your last mock interview and get on-device delivery feedback.",
+        }
+      : {
+          href: `/interviews/${next.id}/practice`,
+          cta: "Start a mock",
+          desc: "Finish a mock interview, then get on-device feedback on your delivery.",
+        };
 
   // Prompt to record an outcome for an interview whose date has passed.
   const pastInterview = findOutcomePrompt(upcoming);
@@ -175,6 +203,27 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       ) : null}
+
+      <Card className="mt-6">
+        <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-foreground">
+              <Video className="size-4" aria-hidden="true" />
+            </span>
+            <div>
+              <p className="font-medium">Video delivery practice</p>
+              <p className="text-sm text-muted-foreground">{delivery.desc}</p>
+            </div>
+          </div>
+          <Button
+            asChild
+            size="sm"
+            className="shrink-0 self-start sm:self-auto"
+          >
+            <Link href={delivery.href}>{delivery.cta}</Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">

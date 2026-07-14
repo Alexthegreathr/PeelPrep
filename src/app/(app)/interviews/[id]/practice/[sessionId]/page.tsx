@@ -112,20 +112,22 @@ export default async function SessionPage(
           </ol>
 
           {plan && consents ? (
-            <VideoDeliveryPanel
-              interviewId={id}
-              sessionId={sessionId}
-              isPro={plan.planKey === "pro"}
-              consents={{
-                vda_camera: consents.vda_camera,
-                vda_microphone: consents.vda_microphone,
-                vda_recording: consents.vda_recording,
-                vda_media_upload: consents.vda_media_upload,
-                vda_ai_analysis: consents.vda_ai_analysis,
-              }}
-              analyses={analyses}
-              transcriptionIsMock={isMockTranscription()}
-            />
+            <div id="delivery-analysis" className="scroll-mt-6">
+              <VideoDeliveryPanel
+                interviewId={id}
+                sessionId={sessionId}
+                isPro={plan.planKey === "pro"}
+                consents={{
+                  vda_camera: consents.vda_camera,
+                  vda_microphone: consents.vda_microphone,
+                  vda_recording: consents.vda_recording,
+                  vda_media_upload: consents.vda_media_upload,
+                  vda_ai_analysis: consents.vda_ai_analysis,
+                }}
+                analyses={analyses}
+                transcriptionIsMock={isMockTranscription()}
+              />
+            </div>
           ) : null}
         </div>
       )}

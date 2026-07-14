@@ -127,3 +127,20 @@ export async function getLatestRecommendedAction(
     .maybeSingle();
   return data?.recommended_action ?? null;
 }
+
+/** The user's most recent completed practice session — the entry point for
+ *  Video Delivery Analysis (which lives on a completed session's review page). */
+export async function getLatestCompletedSession(
+  userId: string,
+): Promise<{ id: string; interviewId: string } | null> {
+  const admin = createSupabaseAdminClient();
+  const { data } = await admin
+    .from("practice_sessions")
+    .select("id, interview_id")
+    .eq("user_id", userId)
+    .eq("status", "completed")
+    .order("completed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data ? { id: data.id, interviewId: data.interview_id } : null;
+}

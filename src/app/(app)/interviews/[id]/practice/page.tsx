@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Info } from "lucide-react";
+import { ChevronRight, Info, Video } from "lucide-react";
 
 import { getInterview } from "@/lib/data/interviews";
 import { listSessions } from "@/lib/data/practice";
@@ -96,6 +96,12 @@ export default async function PracticePage(
                         )}{" "}
                         · {s.status}
                       </span>
+                      {s.status === "completed" ? (
+                        <span className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                          <Video className="size-3" aria-hidden="true" />{" "}
+                          Delivery analysis available
+                        </span>
+                      ) : null}
                     </span>
                     <span className="flex items-center gap-1">
                       <Badge
