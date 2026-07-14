@@ -204,6 +204,19 @@ export const checklistSuggestionsSchema = z.object({
     .default([]),
 });
 
+// Phase 8B — observational delivery coaching (AI_ARCHITECTURE.md §10).
+export const deliveryFeedbackSchema = z.object({
+  observable_strengths: z.array(z.string()).default([]),
+  // Issues phrased as observations tied to a measurement.
+  delivery_observations: z.array(z.string()).default([]),
+  top_improvement: z.string().min(1),
+  camera_setup_advice: z.string().default(""),
+  speaking_advice: z.string().default(""),
+  practice_exercise: z.string().default(""),
+  // Required, non-empty: uncertainty + measurement limitations.
+  uncertainty_and_limitations: z.string().min(1),
+});
+
 export const TASK_SCHEMAS = {
   company_analysis: companyAnalysisSchema,
   role_analysis: roleAnalysisSchema,
@@ -217,6 +230,7 @@ export const TASK_SCHEMAS = {
   readiness_advice: readinessAdviceSchema,
   condensed_brief: condensedBriefSchema,
   checklist_suggestions: checklistSuggestionsSchema,
+  delivery_feedback: deliveryFeedbackSchema,
 } satisfies Record<AiTask, z.ZodType>;
 
 export type TaskOutput<T extends AiTask> = z.infer<(typeof TASK_SCHEMAS)[T]>;

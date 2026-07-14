@@ -502,6 +502,187 @@ export type Database = {
           },
         ];
       };
+      delivery_analyses: {
+        Row: {
+          ai_generation_id: string | null;
+          analysis_consent_at: string;
+          answer_id: string | null;
+          coaching_goals: string[];
+          created_at: string;
+          feedback: Json | null;
+          id: string;
+          media_asset_id: string | null;
+          missing_measurements: string[];
+          session_id: string;
+          status: Database["public"]["Enums"]["delivery_analysis_status"];
+          transcript_id: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          ai_generation_id?: string | null;
+          analysis_consent_at: string;
+          answer_id?: string | null;
+          coaching_goals?: string[];
+          created_at?: string;
+          feedback?: Json | null;
+          id?: string;
+          media_asset_id?: string | null;
+          missing_measurements?: string[];
+          session_id: string;
+          status?: Database["public"]["Enums"]["delivery_analysis_status"];
+          transcript_id?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          ai_generation_id?: string | null;
+          analysis_consent_at?: string;
+          answer_id?: string | null;
+          coaching_goals?: string[];
+          created_at?: string;
+          feedback?: Json | null;
+          id?: string;
+          media_asset_id?: string | null;
+          missing_measurements?: string[];
+          session_id?: string;
+          status?: Database["public"]["Enums"]["delivery_analysis_status"];
+          transcript_id?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "delivery_analyses_ai_generation_id_fkey";
+            columns: ["ai_generation_id"];
+            isOneToOne: false;
+            referencedRelation: "ai_generations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "delivery_analyses_answer_id_fkey";
+            columns: ["answer_id"];
+            isOneToOne: false;
+            referencedRelation: "answers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "delivery_analyses_media_asset_id_fkey";
+            columns: ["media_asset_id"];
+            isOneToOne: false;
+            referencedRelation: "media_assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "delivery_analyses_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "practice_sessions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "delivery_analyses_transcript_id_fkey";
+            columns: ["transcript_id"];
+            isOneToOne: false;
+            referencedRelation: "transcripts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "delivery_analyses_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      delivery_metrics: {
+        Row: {
+          analysis_id: string;
+          answer_duration_seconds: number | null;
+          avg_pause_ms: number | null;
+          camera_facing_pct: number | null;
+          created_at: string;
+          filler_word_count: number | null;
+          filler_words_per_100: number | null;
+          frame_centering_pct: number | null;
+          framing_flag: boolean;
+          head_turns_per_min: number | null;
+          id: string;
+          lighting_flag: boolean;
+          longest_pause_ms: number | null;
+          movement_events_per_min: number | null;
+          pause_count: number | null;
+          posture_stability_score: number | null;
+          sample_coverage_pct: number | null;
+          shoulder_angle_variation_deg: number | null;
+          speaking_pace_wpm: number | null;
+          user_id: string;
+          volume_variation_coeff: number | null;
+        };
+        Insert: {
+          analysis_id: string;
+          answer_duration_seconds?: number | null;
+          avg_pause_ms?: number | null;
+          camera_facing_pct?: number | null;
+          created_at?: string;
+          filler_word_count?: number | null;
+          filler_words_per_100?: number | null;
+          frame_centering_pct?: number | null;
+          framing_flag?: boolean;
+          head_turns_per_min?: number | null;
+          id?: string;
+          lighting_flag?: boolean;
+          longest_pause_ms?: number | null;
+          movement_events_per_min?: number | null;
+          pause_count?: number | null;
+          posture_stability_score?: number | null;
+          sample_coverage_pct?: number | null;
+          shoulder_angle_variation_deg?: number | null;
+          speaking_pace_wpm?: number | null;
+          user_id: string;
+          volume_variation_coeff?: number | null;
+        };
+        Update: {
+          analysis_id?: string;
+          answer_duration_seconds?: number | null;
+          avg_pause_ms?: number | null;
+          camera_facing_pct?: number | null;
+          created_at?: string;
+          filler_word_count?: number | null;
+          filler_words_per_100?: number | null;
+          frame_centering_pct?: number | null;
+          framing_flag?: boolean;
+          head_turns_per_min?: number | null;
+          id?: string;
+          lighting_flag?: boolean;
+          longest_pause_ms?: number | null;
+          movement_events_per_min?: number | null;
+          pause_count?: number | null;
+          posture_stability_score?: number | null;
+          sample_coverage_pct?: number | null;
+          shoulder_angle_variation_deg?: number | null;
+          speaking_pace_wpm?: number | null;
+          user_id?: string;
+          volume_variation_coeff?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "delivery_metrics_analysis_id_fkey";
+            columns: ["analysis_id"];
+            isOneToOne: true;
+            referencedRelation: "delivery_analyses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "delivery_metrics_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       feedback: {
         Row: {
           ai_generation_id: string | null;
@@ -867,6 +1048,88 @@ export type Database = {
           },
         ];
       };
+      media_assets: {
+        Row: {
+          answer_id: string | null;
+          created_at: string;
+          deleted_at: string | null;
+          duration_seconds: number | null;
+          id: string;
+          media_kind: Database["public"]["Enums"]["media_kind"];
+          mime_type: string;
+          processing_status: Database["public"]["Enums"]["media_processing_status"];
+          recording_consent_at: string;
+          retention: Database["public"]["Enums"]["media_retention"];
+          retention_expires_at: string | null;
+          session_id: string;
+          size_bytes: number;
+          storage_path: string;
+          updated_at: string;
+          upload_consent_at: string;
+          user_id: string;
+        };
+        Insert: {
+          answer_id?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          duration_seconds?: number | null;
+          id?: string;
+          media_kind: Database["public"]["Enums"]["media_kind"];
+          mime_type: string;
+          processing_status?: Database["public"]["Enums"]["media_processing_status"];
+          recording_consent_at: string;
+          retention?: Database["public"]["Enums"]["media_retention"];
+          retention_expires_at?: string | null;
+          session_id: string;
+          size_bytes: number;
+          storage_path: string;
+          updated_at?: string;
+          upload_consent_at: string;
+          user_id: string;
+        };
+        Update: {
+          answer_id?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          duration_seconds?: number | null;
+          id?: string;
+          media_kind?: Database["public"]["Enums"]["media_kind"];
+          mime_type?: string;
+          processing_status?: Database["public"]["Enums"]["media_processing_status"];
+          recording_consent_at?: string;
+          retention?: Database["public"]["Enums"]["media_retention"];
+          retention_expires_at?: string | null;
+          session_id?: string;
+          size_bytes?: number;
+          storage_path?: string;
+          updated_at?: string;
+          upload_consent_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "media_assets_answer_id_fkey";
+            columns: ["answer_id"];
+            isOneToOne: false;
+            referencedRelation: "answers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "media_assets_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "practice_sessions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "media_assets_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       organization_members: {
         Row: {
           created_at: string;
@@ -1210,6 +1473,73 @@ export type Database = {
           },
           {
             foreignKeyName: "practice_turns_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      processing_jobs: {
+        Row: {
+          analysis_id: string | null;
+          attempts: number;
+          created_at: string;
+          error_code: string | null;
+          finished_at: string | null;
+          id: string;
+          kind: Database["public"]["Enums"]["processing_job_kind"];
+          media_asset_id: string | null;
+          started_at: string | null;
+          status: Database["public"]["Enums"]["processing_job_status"];
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          analysis_id?: string | null;
+          attempts?: number;
+          created_at?: string;
+          error_code?: string | null;
+          finished_at?: string | null;
+          id?: string;
+          kind: Database["public"]["Enums"]["processing_job_kind"];
+          media_asset_id?: string | null;
+          started_at?: string | null;
+          status?: Database["public"]["Enums"]["processing_job_status"];
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          analysis_id?: string | null;
+          attempts?: number;
+          created_at?: string;
+          error_code?: string | null;
+          finished_at?: string | null;
+          id?: string;
+          kind?: Database["public"]["Enums"]["processing_job_kind"];
+          media_asset_id?: string | null;
+          started_at?: string | null;
+          status?: Database["public"]["Enums"]["processing_job_status"];
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "processing_jobs_analysis_id_fkey";
+            columns: ["analysis_id"];
+            isOneToOne: false;
+            referencedRelation: "delivery_analyses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "processing_jobs_media_asset_id_fkey";
+            columns: ["media_asset_id"];
+            isOneToOne: false;
+            referencedRelation: "media_assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "processing_jobs_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
@@ -1741,6 +2071,70 @@ export type Database = {
           },
         ];
       };
+      transcripts: {
+        Row: {
+          answer_id: string | null;
+          created_at: string;
+          id: string;
+          language: string;
+          provider: string | null;
+          session_id: string;
+          source: Database["public"]["Enums"]["transcript_source"];
+          text: string;
+          updated_at: string;
+          user_id: string;
+          word_count: number;
+        };
+        Insert: {
+          answer_id?: string | null;
+          created_at?: string;
+          id?: string;
+          language?: string;
+          provider?: string | null;
+          session_id: string;
+          source?: Database["public"]["Enums"]["transcript_source"];
+          text: string;
+          updated_at?: string;
+          user_id: string;
+          word_count?: number;
+        };
+        Update: {
+          answer_id?: string | null;
+          created_at?: string;
+          id?: string;
+          language?: string;
+          provider?: string | null;
+          session_id?: string;
+          source?: Database["public"]["Enums"]["transcript_source"];
+          text?: string;
+          updated_at?: string;
+          user_id?: string;
+          word_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "transcripts_answer_id_fkey";
+            columns: ["answer_id"];
+            isOneToOne: false;
+            referencedRelation: "answers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "transcripts_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "practice_sessions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "transcripts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       usage_events: {
         Row: {
           ai_generation_id: string | null;
@@ -1905,6 +2299,7 @@ export type Database = {
         };
         Returns: boolean;
       };
+      sweep_expired_media: { Args: never; Returns: number };
       sweep_stale_usage_reservations: { Args: never; Returns: number };
       upsert_prompt_version: {
         Args: { p_content_hash: string; p_task: string; p_version: string };
@@ -1942,7 +2337,14 @@ export type Database = {
         | "terms_of_service"
         | "privacy_policy"
         | "outcome_research_optin"
-        | "marketing_emails";
+        | "marketing_emails"
+        | "vda_camera"
+        | "vda_microphone"
+        | "vda_recording"
+        | "vda_media_upload"
+        | "vda_ai_analysis";
+      delivery_analysis_status:
+        "pending" | "metrics_ready" | "feedback_ready" | "partial" | "failed";
       document_extraction_status: "pending" | "succeeded" | "failed";
       employment_type:
         "full_time" | "part_time" | "internship" | "contract" | "other";
@@ -1963,6 +2365,10 @@ export type Database = {
       interview_stage:
         "screen" | "technical" | "behavioral" | "panel" | "final" | "other";
       interview_status: "draft" | "preparing" | "completed" | "archived";
+      media_kind: "audio" | "video";
+      media_processing_status:
+        "pending" | "processing" | "processed" | "failed";
+      media_retention: "processing_only" | "saved";
       org_member_role: "member" | "org_admin";
       organization_kind:
         | "university"
@@ -1970,11 +2376,13 @@ export type Database = {
         | "career_center"
         | "employer_program"
         | "other";
-      practice_modality: "text";
+      practice_modality: "text" | "audio" | "video";
       practice_session_status: "in_progress" | "completed" | "abandoned";
       practice_turn_role: "interviewer" | "candidate";
       practice_turn_type:
         "question" | "followup" | "answer" | "wrapup" | "candidate_question";
+      processing_job_kind: "transcription" | "delivery_feedback";
+      processing_job_status: "queued" | "running" | "succeeded" | "failed";
       question_category:
         | "introductory"
         | "behavioral"
@@ -2001,6 +2409,7 @@ export type Database = {
       story_origin: "user_created" | "ai_draft";
       subscription_status:
         "active" | "trialing" | "past_due" | "canceled" | "incomplete";
+      transcript_source: "stt_provider" | "mock" | "user_edited";
       usage_feature:
         | "brief_generate"
         | "section_regenerate"
@@ -2009,7 +2418,9 @@ export type Database = {
         | "practice_session"
         | "practice_turn"
         | "answer_feedback"
-        | "readiness_advice";
+        | "readiness_advice"
+        | "delivery_feedback"
+        | "transcription";
       usage_status: "reserved" | "completed" | "refunded" | "failed";
       user_role: "user" | "admin";
     };
@@ -2184,6 +2595,18 @@ export const Constants = {
         "privacy_policy",
         "outcome_research_optin",
         "marketing_emails",
+        "vda_camera",
+        "vda_microphone",
+        "vda_recording",
+        "vda_media_upload",
+        "vda_ai_analysis",
+      ],
+      delivery_analysis_status: [
+        "pending",
+        "metrics_ready",
+        "feedback_ready",
+        "partial",
+        "failed",
       ],
       document_extraction_status: ["pending", "succeeded", "failed"],
       employment_type: [
@@ -2225,6 +2648,9 @@ export const Constants = {
         "other",
       ],
       interview_status: ["draft", "preparing", "completed", "archived"],
+      media_kind: ["audio", "video"],
+      media_processing_status: ["pending", "processing", "processed", "failed"],
+      media_retention: ["processing_only", "saved"],
       org_member_role: ["member", "org_admin"],
       organization_kind: [
         "university",
@@ -2233,7 +2659,7 @@ export const Constants = {
         "employer_program",
         "other",
       ],
-      practice_modality: ["text"],
+      practice_modality: ["text", "audio", "video"],
       practice_session_status: ["in_progress", "completed", "abandoned"],
       practice_turn_role: ["interviewer", "candidate"],
       practice_turn_type: [
@@ -2243,6 +2669,8 @@ export const Constants = {
         "wrapup",
         "candidate_question",
       ],
+      processing_job_kind: ["transcription", "delivery_feedback"],
+      processing_job_status: ["queued", "running", "succeeded", "failed"],
       question_category: [
         "introductory",
         "behavioral",
@@ -2276,6 +2704,7 @@ export const Constants = {
         "canceled",
         "incomplete",
       ],
+      transcript_source: ["stt_provider", "mock", "user_edited"],
       usage_feature: [
         "brief_generate",
         "section_regenerate",
@@ -2285,6 +2714,8 @@ export const Constants = {
         "practice_turn",
         "answer_feedback",
         "readiness_advice",
+        "delivery_feedback",
+        "transcription",
       ],
       usage_status: ["reserved", "completed", "refunded", "failed"],
       user_role: ["user", "admin"],

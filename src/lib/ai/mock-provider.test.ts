@@ -75,8 +75,8 @@ describe("MockAiProvider", () => {
 
 // Guard: exhaustive task list stays in sync.
 describe("AI_TASKS", () => {
-  it("covers 12 launch tasks", () => {
-    expect(AI_TASKS.length).toBe(12);
+  it("covers all tasks (12 launch + delivery_feedback)", () => {
+    expect(AI_TASKS.length).toBe(13);
     const unique = new Set<AiTask>(AI_TASKS);
     expect(unique.size).toBe(AI_TASKS.length);
   });

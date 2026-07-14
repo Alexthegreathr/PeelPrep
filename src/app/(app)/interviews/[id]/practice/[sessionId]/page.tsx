@@ -4,9 +4,14 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { getSessionData } from "@/lib/data/practice";
+import { getDeliveryAnalyses } from "@/lib/data/vda";
+import { getConsentState } from "@/lib/data/consent";
+import { getEffectivePlan } from "@/lib/data/subscription";
+import { isMockTranscription } from "@/lib/vda/transcription";
 import { PageHeader } from "@/components/app/page-header";
 import { PracticeChat } from "@/components/practice/practice-chat";
 import { AnswerFeedback } from "@/components/practice/answer-feedback";
+import { VideoDeliveryPanel } from "@/components/vda/video-delivery-panel";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -22,6 +27,15 @@ export default async function SessionPage(
   const { session, turns, answers } = data;
   const answerByTurn = new Map(answers.map((a) => [a.turn_id, a]));
   const inProgress = session.status === "in_progress";
+
+  // Video Delivery Analysis is only offered on completed sessions (review mode).
+  const [plan, consents, analyses] = inProgress
+    ? [null, null, []]
+    : await Promise.all([
+        getEffectivePlan(),
+        getConsentState(),
+        getDeliveryAnalyses(sessionId),
+      ]);
 
   return (
     <div>
@@ -89,6 +103,23 @@ export default async function SessionPage(
               );
             })}
           </ol>
+
+          {plan && consents ? (
+            <VideoDeliveryPanel
+              interviewId={id}
+              sessionId={sessionId}
+              isPro={plan.planKey === "pro"}
+              consents={{
+                vda_camera: consents.vda_camera,
+                vda_microphone: consents.vda_microphone,
+                vda_recording: consents.vda_recording,
+                vda_media_upload: consents.vda_media_upload,
+                vda_ai_analysis: consents.vda_ai_analysis,
+              }}
+              analyses={analyses}
+              transcriptionIsMock={isMockTranscription()}
+            />
+          ) : null}
         </div>
       )}
     </div>

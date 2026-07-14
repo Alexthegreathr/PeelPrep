@@ -76,6 +76,64 @@ export async function seedPreparingInterview(userId: string): Promise<string> {
   return data.id as string;
 }
 
+/** Upgrade the user to an active Pro subscription (row created at signup). */
+export async function makeUserPro(userId: string): Promise<void> {
+  const { error } = await adminClient()
+    .from("subscriptions")
+    .update({ plan_key: "pro", status: "active" })
+    .eq("user_id", userId);
+  if (error) throw error;
+}
+
+/** Grant the four VDA consents needed to record + analyze (version-current). */
+export async function grantVdaConsents(userId: string): Promise<void> {
+  const version = "2026-07-13";
+  const now = new Date().toISOString();
+  const rows = [
+    "vda_camera",
+    "vda_microphone",
+    "vda_recording",
+    "vda_ai_analysis",
+  ].map((consent_type) => ({
+    user_id: userId,
+    consent_type,
+    version,
+    granted: true,
+    granted_at: now,
+  }));
+  const { error } = await adminClient().from("user_consents").insert(rows);
+  if (error) throw error;
+}
+
+/** Seed a completed practice session with one interviewer turn, ready to review. */
+export async function seedCompletedSession(
+  userId: string,
+  interviewId: string,
+): Promise<string> {
+  const a = adminClient();
+  const { data: session, error } = await a
+    .from("practice_sessions")
+    .insert({
+      user_id: userId,
+      interview_id: interviewId,
+      status: "completed",
+      config: { length: 1 },
+      completed_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+  if (error || !session) throw error ?? new Error("seed session failed");
+  await a.from("practice_turns").insert({
+    user_id: userId,
+    session_id: session.id,
+    turn_index: 0,
+    role: "interviewer",
+    turn_type: "question",
+    content: "Tell me about a project you're proud of.",
+  });
+  return session.id as string;
+}
+
 type MailpitMessage = {
   ID: string;
   To: { Address: string }[];

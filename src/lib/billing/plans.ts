@@ -17,10 +17,12 @@ export type MeteredFeature =
   | "questions_generate"
   | "story_suggest"
   | "practice_session"
-  | "answer_feedback";
+  | "answer_feedback"
+  | "delivery_feedback"; // Phase 8B — Video Delivery Analysis (Pro only)
 
 /** Features tracked in the ledger for cost but not quota-limited in the beta. */
-export type UnmeteredFeature = "practice_turn" | "readiness_advice";
+export type UnmeteredFeature =
+  "practice_turn" | "readiness_advice" | "transcription";
 
 export type UsageFeature = MeteredFeature | UnmeteredFeature;
 
@@ -55,6 +57,7 @@ export const PLANS: Record<PlanKey, PlanEntitlements> = {
       story_suggest: 0,
       practice_session: 1,
       answer_feedback: 2,
+      delivery_feedback: 0,
     },
     dailyLimits: {},
   },
@@ -72,6 +75,7 @@ export const PLANS: Record<PlanKey, PlanEntitlements> = {
       story_suggest: 40,
       practice_session: 3,
       answer_feedback: 20,
+      delivery_feedback: 0,
     },
     dailyLimits: { brief_generate: 10 },
   },
@@ -89,6 +93,7 @@ export const PLANS: Record<PlanKey, PlanEntitlements> = {
       story_suggest: 100,
       practice_session: 10,
       answer_feedback: 100,
+      delivery_feedback: 20,
     },
     dailyLimits: { brief_generate: 15 },
   },

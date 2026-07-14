@@ -223,6 +223,26 @@ const MOCK_FIXTURES: Record<AiTask, unknown> = {
       { label: "Test your video setup", detail: "Camera, mic, lighting." },
     ],
   },
+  delivery_feedback: {
+    observable_strengths: [
+      "Your answer was a good length (~55s) and well-paced.",
+      "Camera-facing time was high — an approximation of eye contact.",
+    ],
+    delivery_observations: [
+      "Speaking pace was ~170 wpm — a touch fast; slowing slightly can aid clarity.",
+      "About 4 filler words were counted; pausing instead can tighten delivery.",
+    ],
+    top_improvement:
+      "Replace filler words with short intentional pauses to sound more deliberate.",
+    camera_setup_advice:
+      "Framing looked centered; keep the camera at eye level for a natural angle.",
+    speaking_advice:
+      "Aim for ~140–150 wpm and let key points breathe with a brief pause.",
+    practice_exercise:
+      "Re-record the same answer, consciously pausing where you'd normally say 'um'.",
+    uncertainty_and_limitations:
+      "These are approximate measurements from limited samples, not judgments about you. Camera-facing percentage approximates eye contact and can be affected by lighting and framing.",
+  },
 };
 
 function hashInput(input: string): number {

@@ -12,7 +12,13 @@ import type { SubscriptionRow } from "@/lib/data/types";
  * cost but never quota-blocked — modeled with an effectively-unlimited limit.
  */
 export type UsageFeature =
-  MeteredFeature | "practice_turn" | "readiness_advice";
+  MeteredFeature | "practice_turn" | "readiness_advice" | "transcription";
+
+const UNMETERED = new Set([
+  "practice_turn",
+  "readiness_advice",
+  "transcription",
+]);
 
 // ~int4 max — reserve_usage still records the row; it just never blocks.
 export const UNMETERED_LIMIT = 2_000_000_000;
@@ -43,7 +49,7 @@ export function usagePeriod(sub: SubscriptionRow | null): UsagePeriod {
 export function isMeteredFeature(
   feature: UsageFeature,
 ): feature is MeteredFeature {
-  return feature !== "practice_turn" && feature !== "readiness_advice";
+  return !UNMETERED.has(feature);
 }
 
 export function featureLimit(planKey: PlanKey, feature: UsageFeature): number {

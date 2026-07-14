@@ -15,7 +15,7 @@ export const AI_TASKS = [
   "readiness_advice",
   "condensed_brief",
   "checklist_suggestions",
-  // "delivery_feedback" ships with the optional Phase 8B.
+  "delivery_feedback", // Phase 8B — Video Delivery Analysis
 ] as const;
 
 export type AiTask = (typeof AI_TASKS)[number];

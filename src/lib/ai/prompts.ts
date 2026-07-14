@@ -84,6 +84,11 @@ const PROMPT_DEFS: Record<AiTask, PromptDef> = {
     instructions:
       "Suggest concrete preparation checklist items tailored to this interview.",
   },
+  delivery_feedback: {
+    version: "1.0.0",
+    instructions:
+      "You are given ONLY aggregate delivery measurements (never pixels, audio, or landmarks) and optionally a transcript. Give optional coaching based strictly on those measurements. Describe 'eye contact' only as approximate camera-facing behavior. NEVER state or imply the person lacks confidence, is nervous, is dishonest, has a personality trait, will be liked or disliked, or is guaranteed any outcome; never infer emotions, health, disability, or mental state. When a measurement is missing or coverage is low, say so instead of extrapolating. uncertainty_and_limitations must be non-empty.",
+  },
 };
 
 export type ResolvedPrompt = { version: string; system: string };

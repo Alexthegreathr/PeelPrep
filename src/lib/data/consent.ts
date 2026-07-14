@@ -13,12 +13,9 @@ export async function getConsentState(): Promise<Record<ConsentType, boolean>> {
     .select("consent_type, granted, revoked_at, created_at")
     .order("created_at", { ascending: false });
 
-  const state = {
-    terms_of_service: false,
-    privacy_policy: false,
-    outcome_research_optin: false,
-    marketing_emails: false,
-  } as Record<ConsentType, boolean>;
+  const state = Object.fromEntries(
+    (Object.keys(CONSENT_VERSIONS) as ConsentType[]).map((k) => [k, false]),
+  ) as Record<ConsentType, boolean>;
 
   const seen = new Set<string>();
   for (const row of data ?? []) {

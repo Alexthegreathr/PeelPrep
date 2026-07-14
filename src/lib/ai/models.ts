@@ -30,4 +30,5 @@ export const MAX_OUTPUT_TOKENS: Record<AiTask, number> = {
   readiness_advice: 800,
   condensed_brief: 1500,
   checklist_suggestions: 1200,
+  delivery_feedback: 1500,
 };
