@@ -25,6 +25,15 @@ import {
   VideoPresenceSampler,
   type VideoAggregates,
 } from "@/components/vda/video-metrics";
+import {
+  LandmarkAnalyzer,
+  EMPTY_CUES,
+  type LiveCues,
+} from "@/components/vda/landmark-analyzer";
+import {
+  aggregateLandmarkFrames,
+  type LandmarkFrame,
+} from "@/lib/vda/landmark-metrics";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -192,6 +201,15 @@ function Recorder({
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const samplerRef = useRef<VideoPresenceSampler | null>(null);
   const videoAggRef = useRef<VideoAggregates | null>(null);
+  // On-device landmark analysis (posture / eye-contact), loaded lazily.
+  const analyzerRef = useRef<LandmarkAnalyzer | null>(null);
+  const landmarkTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const landmarkFramesRef = useRef<LandmarkFrame[]>([]);
+  const landmarkAggRef = useRef<ReturnType<
+    typeof aggregateLandmarkFrames
+  > | null>(null);
+  const collectingRef = useRef(false);
+  const landmarkStartRef = useRef(0);
 
   const [state, setState] = useState<RecState>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -200,6 +218,9 @@ function Recorder({
   const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
   const [allowTranscription, setAllowTranscription] = useState(false);
   const [result, setResult] = useState<VdaResult | null>(null);
+  // null = not loaded, "loading", true = ready, false = unavailable (fallback).
+  const [analyzer, setAnalyzer] = useState<null | "loading" | boolean>(null);
+  const [liveCues, setLiveCues] = useState<LiveCues>(EMPTY_CUES);
 
   const missingConsents = requiredConsents(consents);
   const canRecord = missingConsents.length === 0;
@@ -210,6 +231,8 @@ function Recorder({
       stopStream();
       if (tickRef.current) clearInterval(tickRef.current);
       if (samplerRef.current) samplerRef.current.finalize(performance.now());
+      stopLandmarks();
+      analyzerRef.current?.close();
       if (playbackUrl) URL.revokeObjectURL(playbackUrl);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -218,6 +241,36 @@ function Recorder({
   function stopStream() {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
+  }
+
+  function stopLandmarks() {
+    if (landmarkTimerRef.current) {
+      clearInterval(landmarkTimerRef.current);
+      landmarkTimerRef.current = null;
+    }
+    collectingRef.current = false;
+    setLiveCues(EMPTY_CUES);
+  }
+
+  // Load models + start the live landmark loop once the camera is on.
+  async function startLandmarks() {
+    if (!analyzerRef.current) {
+      setAnalyzer("loading");
+      const a = new LandmarkAnalyzer();
+      const ok = await a.init();
+      analyzerRef.current = a;
+      setAnalyzer(ok);
+      if (!ok) return; // silent fallback to model-free metrics
+    }
+    if (landmarkTimerRef.current) return;
+    landmarkTimerRef.current = setInterval(() => {
+      const a = analyzerRef.current;
+      const v = videoRef.current;
+      if (!a?.ready || !v) return;
+      const { frame, cues } = a.sample(v, performance.now());
+      setLiveCues(cues);
+      if (collectingRef.current) landmarkFramesRef.current.push(frame);
+    }, 280);
   }
 
   async function startPreview() {
@@ -234,6 +287,7 @@ function Recorder({
         await videoRef.current.play().catch(() => {});
       }
       setState("previewing");
+      void startLandmarks(); // begin on-device posture/eye-contact analysis
     } catch {
       setError(
         "Couldn't access your camera and microphone. Check your browser permissions and try again.",
@@ -272,6 +326,10 @@ function Recorder({
       samplerRef.current = sampler;
     }
     videoAggRef.current = null;
+    // Begin collecting landmark frames for the post-session aggregate.
+    landmarkFramesRef.current = [];
+    landmarkStartRef.current = startedAtRef.current;
+    collectingRef.current = true;
     setElapsed(0);
     setState("recording");
     tickRef.current = setInterval(() => {
@@ -291,6 +349,16 @@ function Recorder({
       videoAggRef.current = samplerRef.current.finalize(performance.now());
       samplerRef.current = null;
     }
+    // Aggregate the collected landmark frames (posture / eye-contact).
+    collectingRef.current = false;
+    const frames = landmarkFramesRef.current;
+    landmarkAggRef.current = frames.length
+      ? aggregateLandmarkFrames(
+          frames,
+          performance.now() - landmarkStartRef.current,
+        )
+      : null;
+    stopLandmarks();
     if (recorderRef.current && recorderRef.current.state !== "inactive") {
       recorderRef.current.stop();
     }
@@ -315,9 +383,7 @@ function Recorder({
     try {
       const audio = await computeAudioAggregates(recordedBlob, elapsed);
       // Model-free video presence metrics (movement, lighting, framing) computed
-      // on-device from the preview. Camera-facing and posture stay null — they
-      // need the documented landmark model — so the report is honest about
-      // coverage rather than inventing values.
+      // on-device from the preview.
       const video = videoAggRef.current ?? {
         movement_events_per_min: null,
         frame_centering_pct: null,
@@ -329,7 +395,19 @@ function Recorder({
         shoulder_angle_variation_deg: null,
         head_turns_per_min: null,
       };
-      const metrics = { ...audio, ...video };
+      // Overlay the real on-device landmark measurements (camera-facing, head
+      // turns, posture, shoulder variation) where they were detected; keep the
+      // model-free values (movement, lighting) and stay null where unmeasured.
+      const landmarks = landmarkAggRef.current;
+      const metrics: Record<string, number | boolean | null> = {
+        ...audio,
+        ...video,
+      };
+      if (landmarks) {
+        for (const [k, v] of Object.entries(landmarks)) {
+          if (v != null) metrics[k] = v;
+        }
+      }
       const res = await submitDeliveryMetrics(interviewId, sessionId, {
         metrics,
         coachingGoals: [],
@@ -411,7 +489,39 @@ function Recorder({
             Camera off
           </div>
         ) : null}
+        {(state === "previewing" || state === "recording") &&
+        analyzer !== false ? (
+          <div className="absolute bottom-3 left-3 right-3 flex flex-wrap items-center gap-1.5">
+            {analyzer === "loading" || analyzer === null ? (
+              <span className="rounded-full bg-black/70 px-3 py-1 text-xs text-white/80">
+                Loading on-device analysis…
+              </span>
+            ) : (
+              <>
+                <LiveCue on={liveCues.facing} label="Facing camera" />
+                <LiveCue on={liveCues.centered} label="Centered" />
+                <LiveCue
+                  on={liveCues.postureSteady}
+                  label="Posture steady"
+                  neutralWhenNull
+                />
+                {!liveCues.faceDetected ? (
+                  <span className="rounded-full bg-black/70 px-3 py-1 text-xs text-white/70">
+                    No face detected
+                  </span>
+                ) : null}
+              </>
+            )}
+          </div>
+        ) : null}
       </div>
+      {analyzer === true &&
+      (state === "previewing" || state === "recording") ? (
+        <p className="text-xs text-muted-foreground">
+          Posture &amp; eye-contact are measured live on your device
+          (MediaPipe). Nothing about the video leaves this tab.
+        </p>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-2">
         {state === "idle" ? (
@@ -428,6 +538,7 @@ function Recorder({
               type="button"
               variant="outline"
               onClick={() => {
+                stopLandmarks();
                 stopStream();
                 if (videoRef.current) videoRef.current.srcObject = null;
                 setState("idle");
@@ -737,6 +848,31 @@ function PresenceSummaryBlock({
         </p>
       ) : null}
     </div>
+  );
+}
+
+function LiveCue({
+  on,
+  label,
+  neutralWhenNull = false,
+}: {
+  on: boolean | null;
+  label: string;
+  neutralWhenNull?: boolean;
+}) {
+  const color =
+    on === null
+      ? neutralWhenNull
+        ? "bg-white/40"
+        : "bg-amber-400"
+      : on
+        ? "bg-emerald-400"
+        : "bg-amber-400";
+  return (
+    <span className="flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1 text-xs font-medium text-white">
+      <span className={`size-2 rounded-full ${color}`} aria-hidden="true" />
+      {label}
+    </span>
   );
 }
 

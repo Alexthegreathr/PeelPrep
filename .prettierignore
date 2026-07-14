@@ -9,3 +9,4 @@ package-lock.json
 
 # Prose is maintained by hand; prettier's markdown table rewrapping adds noise
 *.md
+public/mediapipe/

@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored on-device vision runtime (MediaPipe WASM/JS), fetched locally.
+    "public/mediapipe/**",
   ]),
 ]);
 

@@ -48,3 +48,6 @@ next-env.d.ts
 # Local Supabase CLI state
 supabase/.branches/
 supabase/.temp/
+
+# On-device vision assets (fetched via scripts/fetch-vision-assets.mjs)
+/public/mediapipe/

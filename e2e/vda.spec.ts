@@ -69,13 +69,19 @@ test.describe("video delivery analysis", () => {
     await page.goto(`/interviews/${interviewId}/practice/${sessionId}`);
 
     // The VDA panel is present for a Pro user on a completed session.
+    // (Loading the on-device landmark models adds CPU work, so allow headroom
+    // for the panel + button states under full-suite parallel load.)
     await expect(
       page.getByText(/video delivery analysis/i).first(),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 20000 });
 
     // Record a short answer with the fake camera.
-    await page.getByRole("button", { name: /turn on camera/i }).click();
-    await page.getByRole("button", { name: /start recording/i }).click();
+    await page
+      .getByRole("button", { name: /turn on camera/i })
+      .click({ timeout: 20000 });
+    await page
+      .getByRole("button", { name: /start recording/i })
+      .click({ timeout: 20000 });
     // Let a little media accumulate, then stop.
     await page.waitForTimeout(1500);
     await page.getByRole("button", { name: /^stop$/i }).click();
@@ -83,7 +89,7 @@ test.describe("video delivery analysis", () => {
     // Analyze the recording (computes aggregates in-browser, submits JSON only).
     await expect(
       page.getByRole("button", { name: /analyze delivery/i }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 20000 });
     await page.getByRole("button", { name: /analyze delivery/i }).click();
 
     // A report renders with the uncertainty framing.

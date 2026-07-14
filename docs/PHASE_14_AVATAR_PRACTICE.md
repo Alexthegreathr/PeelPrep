@@ -70,11 +70,23 @@ to cover the presence-summary vocabulary (§4, §7).
   invariant). Voice requires the existing `vda_microphone` (capture) and, for
   transcription, `vda_media_upload` consents — no new consent types.
 
-### 3c. Landmark-backed delivery report + presence summary (post-session)
+### 3c. Landmark-backed delivery report + presence summary — IMPLEMENTED
 
-- Because analysis is **post-session**, we process the saved/last recording after
-  the mock — no real-time 30fps overlay, so perf risk is low and it matches the
-  proven VDA pipeline.
+> **Status:** shipped. Real MediaPipe **FaceLandmarker + PoseLandmarker** now run
+> on-device (`src/components/vda/landmark-analyzer.ts`), with the pure aggregation
+> math in `src/lib/vda/landmark-metrics.ts`. The WASM runtime + `.task` models are
+> **self-hosted** under `public/mediapipe/` (git-ignored; fetched by
+> `npm run setup:vision`) so no model request or user media ever leaves the origin.
+> Landmarks run **live** during recording (a lightweight cue overlay: facing
+> camera / centered / posture steady) *and* aggregate into the post-session report.
+> If the model can't load, the recorder silently falls back to the model-free
+> metrics.
+
+- Both live and post-session use the same on-device analyzer; the post-session
+  aggregate populates the video metrics that VDA previously submitted as
+  `null` (`camera_facing_pct`, `frame_centering_pct`, `posture_stability_score`,
+  `shoulder_angle_variation_deg`, `head_turns_per_min`, `sample_coverage_pct`).
+  All aggregates; raw frames and landmark coordinates never leave the tab.
 - Wire in the **on-device face/pose landmark model** (MediaPipe Tasks / WASM in a
   Web Worker) that Phase 8B documented but stubbed. It now populates the video
   metrics that VDA currently submits as `null`: `camera_facing_pct`,
