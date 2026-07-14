@@ -13,6 +13,7 @@ import { READINESS_COMPONENT_LABELS } from "@/lib/readiness/calculator";
 import { PageHeader } from "@/components/app/page-header";
 import { InterviewSubnav } from "@/components/interviews/interview-subnav";
 import { ScoreRing } from "@/components/shared/score-ring";
+import { AnimatedBar } from "@/components/shared/animated-bar";
 import { ReadinessChart } from "@/components/readiness/readiness-chart";
 import { ReadinessHistory } from "@/components/readiness/readiness-history";
 import { ChecklistCard } from "@/components/readiness/checklist-card";
@@ -102,7 +103,7 @@ export default async function ReadinessPage(
           <CardContent className="pt-6">
             <ReadinessChart components={result.components} />
             <ul className="mt-4 flex flex-col divide-y">
-              {result.components.map((c) => {
+              {result.components.map((c, idx) => {
                 const full = c.raw >= 0.999;
                 return (
                   <li
@@ -122,18 +123,26 @@ export default async function ReadinessPage(
                         />
                       )}
                     </span>
-                    <span className="flex-1">
-                      <span className="font-medium">
-                        {READINESS_COMPONENT_LABELS[c.component]}
+                    <div className="flex-1">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="font-medium">
+                          {READINESS_COMPONENT_LABELS[c.component]}
+                        </span>
+                        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                          {Math.round(c.weightedPoints)}/{c.weight}
+                        </span>
+                      </div>
+                      <AnimatedBar
+                        value={c.raw}
+                        max={1}
+                        delayMs={idx * 60}
+                        className="my-1.5 h-1"
+                        fillClassName={full ? "bg-success" : "bg-primary"}
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        {c.explanation}
                       </span>
-                      <span className="text-muted-foreground">
-                        {" "}
-                        — {c.explanation}
-                      </span>
-                    </span>
-                    <span className="tabular-nums text-muted-foreground">
-                      {Math.round(c.weightedPoints)}/{c.weight}
-                    </span>
+                    </div>
                   </li>
                 );
               })}

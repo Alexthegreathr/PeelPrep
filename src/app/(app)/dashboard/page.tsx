@@ -24,6 +24,8 @@ import {
 import { PageHeader } from "@/components/app/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ScoreRing } from "@/components/shared/score-ring";
+import { CountUp } from "@/components/shared/count-up";
+import { AnimatedBar } from "@/components/shared/animated-bar";
 import { AddInterviewButton } from "@/components/interviews/add-interview-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -242,18 +244,17 @@ export default async function DashboardPage() {
                       {m.used} / {m.limit}
                     </span>
                   </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-                    <div
-                      className={
-                        m.used >= m.limit
-                          ? "h-full bg-warning"
-                          : pct >= 80
-                            ? "h-full bg-warning/70"
-                            : "h-full bg-primary"
-                      }
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
+                  <AnimatedBar
+                    value={m.used}
+                    max={Math.max(1, m.limit)}
+                    fillClassName={
+                      m.used >= m.limit
+                        ? "bg-warning"
+                        : pct >= 80
+                          ? "bg-warning/70"
+                          : "bg-primary"
+                    }
+                  />
                 </div>
               );
             })}
@@ -267,7 +268,10 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6 text-center">
-            <div className="text-4xl font-bold tabular-nums">{streak}</div>
+            <CountUp
+              value={streak}
+              className="text-4xl font-bold tabular-nums"
+            />
             <div className="text-xs text-muted-foreground">
               day{streak === 1 ? "" : "s"} in a row
             </div>
