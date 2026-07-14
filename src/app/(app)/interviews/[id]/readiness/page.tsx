@@ -12,6 +12,7 @@ import { getReadinessHistory } from "@/lib/data/readiness";
 import { READINESS_COMPONENT_LABELS } from "@/lib/readiness/calculator";
 import { PageHeader } from "@/components/app/page-header";
 import { InterviewSubnav } from "@/components/interviews/interview-subnav";
+import { ScoreRing } from "@/components/shared/score-ring";
 import { ReadinessChart } from "@/components/readiness/readiness-chart";
 import { ReadinessHistory } from "@/components/readiness/readiness-history";
 import { ChecklistCard } from "@/components/readiness/checklist-card";
@@ -66,10 +67,7 @@ export default async function ReadinessPage(
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-1">
           <CardContent className="flex flex-col items-center gap-2 pt-8 text-center">
-            <div className="text-6xl font-bold tabular-nums">
-              {result.score}
-            </div>
-            <div className="text-sm text-muted-foreground">out of 100</div>
+            <ScoreRing score={result.score} size={148} stroke={12} />
             <p className="mt-2 text-xs text-muted-foreground">
               This measures your preparation, not your chances. It never implies
               a guaranteed outcome.

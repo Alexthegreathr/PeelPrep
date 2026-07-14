@@ -23,6 +23,7 @@ import {
 } from "@/lib/data/dashboard";
 import { PageHeader } from "@/components/app/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ScoreRing } from "@/components/shared/score-ring";
 import { AddInterviewButton } from "@/components/interviews/add-interview-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -176,12 +177,11 @@ export default async function DashboardPage() {
               <Gauge className="size-4" aria-hidden="true" /> Readiness
             </CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col items-center gap-1 pt-6 text-center">
-            <div className="text-4xl font-bold tabular-nums">{score}</div>
-            <div className="text-xs text-muted-foreground">out of 100</div>
+          <CardContent className="flex flex-col items-center gap-2 pt-6 text-center">
+            <ScoreRing score={score} size={116} />
             <Link
               href={`/interviews/${next.id}/readiness`}
-              className="mt-2 text-sm underline-offset-4 hover:underline"
+              className="text-sm underline-offset-4 hover:underline"
             >
               View breakdown
             </Link>
