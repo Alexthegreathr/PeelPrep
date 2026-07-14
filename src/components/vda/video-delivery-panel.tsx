@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Circle,
+  FlipHorizontal,
+  Frame,
   Loader2,
   Lock,
   ShieldCheck,
@@ -221,6 +223,11 @@ function Recorder({
   // null = not loaded, "loading", true = ready, false = unavailable (fallback).
   const [analyzer, setAnalyzer] = useState<null | "loading" | boolean>(null);
   const [liveCues, setLiveCues] = useState<LiveCues>(EMPTY_CUES);
+  // Self-view is mirrored by default (like a mirror); toggleable. Purely a
+  // display transform — the analysis samples the true, unmirrored frames.
+  const [mirrored, setMirrored] = useState(true);
+  const [showGuide, setShowGuide] = useState(true);
+  const live = state === "previewing" || state === "recording";
 
   const missingConsents = requiredConsents(consents);
   const canRecord = missingConsents.length === 0;
@@ -474,7 +481,22 @@ function Recorder({
           controls={state === "recorded"}
           src={state === "recorded" && playbackUrl ? playbackUrl : undefined}
           className="aspect-video w-full bg-black object-contain"
+          style={live && mirrored ? { transform: "scaleX(-1)" } : undefined}
         />
+        {live && showGuide ? (
+          <div
+            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+            aria-hidden="true"
+          >
+            <div
+              className={`h-[62%] w-[38%] rounded-[50%] border-2 border-dashed transition-colors ${
+                liveCues.centered && liveCues.facing
+                  ? "border-emerald-400/70"
+                  : "border-white/45"
+              }`}
+            />
+          </div>
+        ) : null}
         {state === "recording" ? (
           <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-black/70 px-3 py-1 text-xs font-medium text-white">
             <Circle
@@ -487,6 +509,34 @@ function Recorder({
         {state === "idle" ? (
           <div className="absolute inset-0 flex items-center justify-center text-sm text-white/70">
             Camera off
+          </div>
+        ) : null}
+        {live ? (
+          <div className="absolute right-3 top-3 flex gap-1">
+            <button
+              type="button"
+              onClick={() => setMirrored((m) => !m)}
+              aria-pressed={mirrored}
+              title={mirrored ? "Mirror: on" : "Mirror: off"}
+              className={`flex size-8 items-center justify-center rounded-full bg-black/70 hover:bg-black/85 ${
+                mirrored ? "text-emerald-400" : "text-white/80"
+              }`}
+            >
+              <FlipHorizontal className="size-4" aria-hidden="true" />
+              <span className="sr-only">Toggle mirror</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowGuide((g) => !g)}
+              aria-pressed={showGuide}
+              title={showGuide ? "Framing guide: on" : "Framing guide: off"}
+              className={`flex size-8 items-center justify-center rounded-full bg-black/70 hover:bg-black/85 ${
+                showGuide ? "text-emerald-400" : "text-white/80"
+              }`}
+            >
+              <Frame className="size-4" aria-hidden="true" />
+              <span className="sr-only">Toggle framing guide</span>
+            </button>
           </div>
         ) : null}
         {(state === "previewing" || state === "recording") &&
