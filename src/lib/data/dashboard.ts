@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import type { InterviewRow } from "@/lib/data/types";
 import { planForUser } from "@/lib/billing/resolve";
 import {
   usagePeriod,
@@ -8,6 +9,21 @@ import {
   type UsageFeature,
 } from "@/lib/usage/features";
 import { currentUsage } from "@/lib/usage/ledger";
+
+/** A preparing interview whose date has passed → prompt to record an outcome. */
+export function findOutcomePrompt(
+  interviews: InterviewRow[],
+): InterviewRow | null {
+  const now = Date.now();
+  return (
+    interviews.find(
+      (i) =>
+        i.status === "preparing" &&
+        i.interview_at != null &&
+        new Date(i.interview_at).getTime() < now,
+    ) ?? null
+  );
+}
 
 export type UsageMeter = {
   feature: UsageFeature;

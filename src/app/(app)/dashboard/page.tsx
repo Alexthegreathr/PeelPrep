@@ -16,6 +16,7 @@ import {
   getPracticeStreak,
   getRecentBriefs,
   getLatestRecommendedAction,
+  findOutcomePrompt,
 } from "@/lib/data/dashboard";
 import { PageHeader } from "@/components/app/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -60,6 +61,9 @@ export default async function DashboardPage() {
     getRecentBriefs(user.id),
   ]);
 
+  // Prompt to record an outcome for an interview whose date has passed.
+  const pastInterview = findOutcomePrompt(upcoming);
+
   return (
     <div>
       <PageHeader
@@ -69,6 +73,24 @@ export default async function DashboardPage() {
         description="Your interviews, briefings, and practice live here."
         action={<AddInterviewButton />}
       />
+
+      {pastInterview ? (
+        <Card className="mb-6 border-[#4d7b55]/40 bg-[#4d7b55]/5">
+          <CardContent className="flex flex-col gap-2 pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm">
+              How did your interview with{" "}
+              <span className="font-medium">{pastInterview.company_name}</span>{" "}
+              go? Recording the outcome sharpens your future prep.
+            </p>
+            <Link
+              href={`/interviews/${pastInterview.id}/outcome`}
+              className="text-sm font-medium underline-offset-4 hover:underline"
+            >
+              Record outcome →
+            </Link>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="border-primary/30 bg-primary/5 lg:col-span-2">

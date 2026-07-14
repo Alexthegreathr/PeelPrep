@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import { CircleCheck } from "lucide-react";
 
 import { requireUser } from "@/lib/auth/dal";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getConsentState } from "@/lib/data/consent";
 import { PageHeader } from "@/components/app/page-header";
+import {
+  ConsentToggle,
+  ExportCard,
+  DeleteAccountCard,
+} from "@/components/settings/settings-controls";
 import {
   Card,
   CardHeader,
@@ -15,37 +20,16 @@ import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = { title: "Settings" };
 
-type ConsentRow = {
-  consent_type: string;
-  version: string;
-  granted: boolean;
-  granted_at: string | null;
-};
-
-const CONSENT_LABELS: Record<string, string> = {
-  terms_of_service: "Terms of Service",
-  privacy_policy: "Privacy Policy",
-};
-
 export default async function SettingsPage() {
   await requireUser();
-  const supabase = await createSupabaseServerClient();
-
-  // RLS-scoped: returns only the caller's own consent rows.
-  const { data: consents } = await supabase
-    .from("user_consents")
-    .select("consent_type, version, granted, granted_at")
-    .in("consent_type", ["terms_of_service", "privacy_policy"])
-    .order("granted_at", { ascending: true })
-    .overrideTypes<ConsentRow[]>();
-
+  const consents = await getConsentState();
   const demoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "1";
 
   return (
     <div>
       <PageHeader
         title="Settings"
-        description="Your consents and account controls."
+        description="Your consents, data, and account controls."
       />
 
       <div className="flex flex-col gap-6">
@@ -65,61 +49,69 @@ export default async function SettingsPage() {
           <CardHeader className="border-b">
             <CardTitle>Consents</CardTitle>
             <CardDescription>
-              Recorded when you created your account. Versioned so changes to
-              our policies are tracked.
+              Accepted at signup and managed here. Changes take effect
+              immediately and are audit-logged.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <ul className="flex flex-col divide-y divide-border">
-              {(consents ?? []).length === 0 ? (
-                <li className="py-2 text-sm text-muted-foreground">
-                  No consent records found.
-                </li>
-              ) : (
-                (consents ?? []).map((c) => (
-                  <li
-                    key={`${c.consent_type}-${c.version}`}
-                    className="flex items-center justify-between gap-4 py-3"
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">
-                        {CONSENT_LABELS[c.consent_type] ?? c.consent_type}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        Version {c.version}
-                        {c.granted_at
-                          ? ` · accepted ${new Date(c.granted_at).toLocaleDateString()}`
-                          : ""}
-                      </span>
-                    </div>
-                    {c.granted ? (
-                      <Badge variant="secondary">
-                        <CircleCheck aria-hidden="true" />
-                        Accepted
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline">Revoked</Badge>
-                    )}
-                  </li>
-                ))
-              )}
+            <ul className="flex flex-col divide-y">
+              <li className="flex items-center justify-between gap-4 py-3">
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">
+                    Terms of Service &amp; Privacy Policy
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Required to use PeelPrep — accepted when you signed up.
+                  </span>
+                </div>
+                <Badge variant="secondary">
+                  <CircleCheck aria-hidden="true" /> Accepted
+                </Badge>
+              </li>
+              <li>
+                <ConsentToggle
+                  type="outcome_research_optin"
+                  label="Improve system-wide predictions with anonymized outcomes"
+                  description="Off by default. When on, your anonymized interview outcomes may inform predictions for everyone. Never used to train models; never includes your private content."
+                  initial={consents.outcome_research_optin}
+                />
+              </li>
+              <li>
+                <ConsentToggle
+                  type="marketing_emails"
+                  label="Product update emails"
+                  description="Occasional emails about new features. Off by default."
+                  initial={consents.marketing_emails}
+                />
+              </li>
             </ul>
           </CardContent>
         </Card>
 
-        <Card className="bg-secondary/30">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between gap-2">
-              Data export &amp; account deletion
-              <Badge variant="outline">Later phase</Badge>
-            </CardTitle>
+        <Card>
+          <CardHeader className="border-b">
+            <CardTitle>Export your data</CardTitle>
             <CardDescription>
-              Full data export, consent management (including the outcome
-              research opt-in), and account deletion arrive with the privacy
-              &amp; account phase. Until then, contact support for any data
-              request.
+              Download everything PeelPrep holds about you as JSON, with signed
+              links to your uploaded files.
             </CardDescription>
           </CardHeader>
+          <CardContent className="pt-6">
+            <ExportCard />
+          </CardContent>
+        </Card>
+
+        <Card className="border-destructive/30">
+          <CardHeader className="border-b">
+            <CardTitle>Delete your account</CardTitle>
+            <CardDescription>
+              Permanently erase your account and all associated data. This
+              cannot be undone.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <DeleteAccountCard />
+          </CardContent>
         </Card>
       </div>
     </div>

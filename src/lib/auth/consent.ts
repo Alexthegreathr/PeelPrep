@@ -6,10 +6,20 @@
 export const CONSENT_VERSIONS = {
   terms_of_service: "2026-07-13",
   privacy_policy: "2026-07-13",
+  outcome_research_optin: "2026-07-13",
+  marketing_emails: "2026-07-13",
 } as const;
 
-export type SignupConsentType = keyof typeof CONSENT_VERSIONS;
+export type ConsentType = keyof typeof CONSENT_VERSIONS;
 
-export const SIGNUP_CONSENT_TYPES = Object.keys(
-  CONSENT_VERSIONS,
-) as SignupConsentType[];
+/** Consents captured (as accepted) at signup. */
+export const SIGNUP_CONSENT_TYPES: ConsentType[] = [
+  "terms_of_service",
+  "privacy_policy",
+];
+
+/** Optional consents the user manages in settings (default off). */
+export const MANAGEABLE_CONSENT_TYPES: ConsentType[] = [
+  "outcome_research_optin",
+  "marketing_emails",
+];
