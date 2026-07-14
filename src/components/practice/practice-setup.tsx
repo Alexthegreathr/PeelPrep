@@ -14,7 +14,7 @@ import { INTERVIEW_STAGES } from "@/lib/validation/interview";
 import { STAGE_LABELS } from "@/lib/interviews/labels";
 
 const SELECT =
-  "flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm";
+  "flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50";
 
 export function PracticeSetup({
   interviewId,

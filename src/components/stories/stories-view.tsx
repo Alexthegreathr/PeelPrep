@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -118,9 +119,25 @@ export function StoriesView({
             </Link>
           </Button>
         )}
+        {suggesting ? (
+          <span className="text-xs text-muted-foreground">
+            Drafting story outlines from your materials — this usually takes
+            ~20s.
+          </span>
+        ) : null}
       </div>
 
-      {stories.length === 0 ? (
+      {suggesting && stories.length === 0 ? (
+        <div
+          className="grid gap-4 md:grid-cols-2"
+          aria-busy="true"
+          aria-live="polite"
+        >
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 rounded-xl" />
+          ))}
+        </div>
+      ) : stories.length === 0 ? (
         <EmptyState
           title="No stories yet"
           description="Build a bank of STAR stories you can reuse across interviews. Add your first, or let AI draft an outline from your materials."

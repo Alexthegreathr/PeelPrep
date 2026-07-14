@@ -66,8 +66,10 @@ export function BriefGenerator({
       }
     }
     setRunning(false);
-    if (done || !error) router.refresh();
-  }, [interviewId, router, error]);
+    // Only refresh on success — a failed run must keep its error Alert visible
+    // (reading `error` here would be a stale closure value anyway).
+    if (done) router.refresh();
+  }, [interviewId, router]);
 
   useEffect(() => {
     if (autoStart && !startedRef.current) {

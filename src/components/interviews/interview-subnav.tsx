@@ -25,11 +25,11 @@ export function InterviewSubnav({
   return (
     <nav
       aria-label="Interview preparation"
-      className="mb-6 flex flex-wrap gap-1 border-b"
+      className="mb-6 flex flex-nowrap gap-1 overflow-x-auto border-b [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       <Link
         href={`/interviews/${interviewId}`}
-        className="rounded-t-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
+        className="shrink-0 rounded-t-lg px-3 py-2 text-sm whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         ← Overview
       </Link>
@@ -39,7 +39,7 @@ export function InterviewSubnav({
           href={`/interviews/${interviewId}/${tab.path}`}
           aria-current={active === tab.key ? "page" : undefined}
           className={
-            "rounded-t-lg border-b-2 px-3 py-2 text-sm transition-colors " +
+            "shrink-0 rounded-t-lg border-b-2 px-3 py-2 text-sm whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
             (active === tab.key
               ? "border-primary font-medium text-foreground"
               : "border-transparent text-muted-foreground hover:text-foreground")

@@ -22,7 +22,9 @@ export default function AuthLayout({
       </header>
 
       <main className="flex flex-1 items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md">{children}</div>
+        <div className="w-full max-w-md rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
+          {children}
+        </div>
       </main>
     </div>
   );

@@ -115,7 +115,7 @@ export function BriefSectionCard({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {!isSnapshot ? (
-            <Badge variant="outline" className="text-[#7b4b20]">
+            <Badge variant="outline" className="text-warning">
               AI-generated preparation guidance
             </Badge>
           ) : null}
@@ -185,7 +185,12 @@ export function BriefSectionCard({
 
           <div className="mt-5 flex flex-wrap items-center gap-1 border-t pt-4">
             <Button type="button" variant="ghost" size="sm" onClick={copy}>
-              <Copy aria-hidden="true" /> {copied ? "Copied" : "Copy"}
+              {copied ? (
+                <Check className="text-success" aria-hidden="true" />
+              ) : (
+                <Copy aria-hidden="true" />
+              )}{" "}
+              {copied ? "Copied" : "Copy"}
             </Button>
             <Button
               type="button"
@@ -217,7 +222,7 @@ export function BriefSectionCard({
                   size="sm"
                   onClick={() => rate("up")}
                   aria-pressed={rating === "up"}
-                  className={rating === "up" ? "text-[#4d7b55]" : undefined}
+                  className={rating === "up" ? "text-success" : undefined}
                 >
                   <ThumbsUp aria-hidden="true" />
                   <span className="sr-only">Helpful</span>

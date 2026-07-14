@@ -55,7 +55,7 @@ export function InterviewHub({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <h1 className="font-heading text-2xl font-semibold tracking-tight">
               {interview.company_name || "Untitled interview"}
             </h1>
             <Badge
@@ -126,7 +126,7 @@ export function InterviewHub({
             {interview.job_posting_url ? (
               <p className="mt-4 text-sm">
                 <a
-                  className="inline-flex items-center gap-1 text-[#7b4b20] underline underline-offset-4"
+                  className="inline-flex items-center gap-1 text-warning underline underline-offset-4"
                   href={interview.job_posting_url}
                   target="_blank"
                   rel="noopener noreferrer nofollow"

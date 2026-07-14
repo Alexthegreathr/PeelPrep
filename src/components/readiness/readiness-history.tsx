@@ -21,16 +21,16 @@ export function ReadinessHistory({
           <YAxis
             domain={[0, 100]}
             width={28}
-            tick={{ fontSize: 11, fill: "#667085" }}
+            tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
             axisLine={false}
             tickLine={false}
           />
           <Line
             type="monotone"
             dataKey="score"
-            stroke="#4d7b55"
+            stroke="var(--success)"
             strokeWidth={2}
-            dot={{ r: 3, fill: "#4d7b55" }}
+            dot={{ r: 3, fill: "var(--success)" }}
             isAnimationActive={false}
           />
         </LineChart>

@@ -72,8 +72,8 @@ export function InterviewerAvatar({
         </svg>
         {speaking ? (
           <span className="absolute -right-0.5 -top-0.5 flex size-3">
-            <span className="absolute inline-flex size-3 animate-ping rounded-full bg-emerald-500/70" />
-            <span className="relative inline-flex size-3 rounded-full bg-emerald-500" />
+            <span className="absolute inline-flex size-3 animate-ping rounded-full bg-success/70" />
+            <span className="relative inline-flex size-3 rounded-full bg-success" />
           </span>
         ) : null}
       </div>

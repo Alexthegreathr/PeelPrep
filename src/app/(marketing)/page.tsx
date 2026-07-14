@@ -144,7 +144,7 @@ export default function LandingPage() {
 
       <Section aria-label="Privacy and trust">
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
-          <ShieldCheck className="size-8 text-[#4d7b55]" aria-hidden="true" />
+          <ShieldCheck className="size-8 text-success" aria-hidden="true" />
           <h2 className="text-3xl font-semibold tracking-tight">
             Your career data stays yours
           </h2>
@@ -220,7 +220,7 @@ function TrustItem({ children }: { children: React.ReactNode }) {
   return (
     <li className="flex items-center justify-center gap-2">
       <CheckCircle2
-        className="size-4 shrink-0 text-[#4d7b55]"
+        className="size-4 shrink-0 text-success"
         aria-hidden="true"
       />
       {children}

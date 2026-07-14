@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Check, Info, Lightbulb, X } from "lucide-react";
+import { Check, Circle, Info, Lightbulb } from "lucide-react";
 
 import { requireUser } from "@/lib/auth/dal";
 import { getInterview } from "@/lib/data/interviews";
@@ -114,12 +114,12 @@ export default async function ReadinessPage(
                     <span className="mt-0.5">
                       {full ? (
                         <Check
-                          className="size-4 text-[#4d7b55]"
+                          className="size-4 text-success"
                           aria-hidden="true"
                         />
                       ) : (
-                        <X
-                          className="size-4 text-muted-foreground"
+                        <Circle
+                          className="size-4 text-muted-foreground/50"
                           aria-hidden="true"
                         />
                       )}

@@ -247,7 +247,7 @@ function Stepper({
                 (state === "current"
                   ? "border-primary bg-primary/10 font-medium"
                   : state === "done"
-                    ? "border-[#4d7b55]/40 bg-[#4d7b55]/5 text-foreground hover:bg-[#4d7b55]/10"
+                    ? "border-success/40 bg-success/5 text-foreground hover:bg-success/10"
                     : "text-muted-foreground hover:bg-secondary")
               }
             >
@@ -255,7 +255,7 @@ function Stepper({
                 className={
                   "flex size-5 shrink-0 items-center justify-center rounded-full text-xs " +
                   (state === "done"
-                    ? "bg-[#4d7b55] text-white"
+                    ? "bg-success text-white"
                     : state === "current"
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground")
@@ -285,7 +285,7 @@ function SaveIndicator({ state }: { state: SaveState }) {
     );
   if (state === "saved")
     return (
-      <span className="flex items-center gap-1 text-[#4d7b55]">
+      <span className="flex items-center gap-1 text-success">
         <Check className="size-3" aria-hidden="true" /> Draft saved
       </span>
     );
@@ -770,7 +770,7 @@ function StepReview({
         />
       ) : null}
 
-      <div className="rounded-lg border border-[#e8ddb5] bg-secondary/40 p-4 text-sm">
+      <div className="rounded-lg border border-border bg-secondary/40 p-4 text-sm">
         <h4 className="mb-2 font-medium">What PeelPrep will analyze</h4>
         <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
           <li>The job description and role details you entered</li>

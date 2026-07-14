@@ -88,7 +88,7 @@ export default function PricingPage() {
                   {FEATURES[key].map((f) => (
                     <li key={f} className="flex items-start gap-2">
                       <Check
-                        className="mt-0.5 size-4 shrink-0 text-[#4d7b55]"
+                        className="mt-0.5 size-4 shrink-0 text-success"
                         aria-hidden="true"
                       />
                       {f}

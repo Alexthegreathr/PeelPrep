@@ -44,7 +44,7 @@ export function ReadinessChart({
             type="category"
             dataKey="name"
             width={140}
-            tick={{ fontSize: 12, fill: "#667085" }}
+            tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
             axisLine={false}
             tickLine={false}
           />
@@ -52,17 +52,17 @@ export function ReadinessChart({
             dataKey="pct100"
             radius={4}
             isAnimationActive={false}
-            background={{ fill: "#f0e7cf", radius: 4 }}
+            background={{ fill: "var(--secondary)", radius: 4 }}
           >
             {data.map((d, i) => (
               <Cell
                 key={i}
                 fill={
                   d.pct >= 0.75
-                    ? "#4d7b55"
+                    ? "var(--success)"
                     : d.pct >= 0.4
                       ? "#ffd21f"
-                      : "#7b4b20"
+                      : "var(--warning)"
                 }
               />
             ))}

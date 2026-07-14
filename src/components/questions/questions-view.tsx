@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -107,9 +108,24 @@ export function QuestionsView({
           {questions.length ? "Generate more" : "Generate predicted questions"}
         </Button>
         <AddQuestionButton interviewId={interviewId} />
+        {generating ? (
+          <span className="text-xs text-muted-foreground">
+            Grounding questions in your interview — this usually takes ~20s.
+          </span>
+        ) : null}
       </div>
 
-      {questions.length === 0 ? (
+      {generating && questions.length === 0 ? (
+        <div
+          className="flex flex-col gap-3"
+          aria-busy="true"
+          aria-live="polite"
+        >
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full rounded-xl" />
+          ))}
+        </div>
+      ) : questions.length === 0 ? (
         <EmptyState
           title="No questions yet"
           description="Generate a set of predicted questions grounded in your interview, or add your own to practice."
@@ -168,7 +184,7 @@ function FilterChip({
       aria-selected={active}
       onClick={onClick}
       className={
-        "rounded-full border px-3 py-1 text-sm transition-colors " +
+        "rounded-full border px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
         (active
           ? "border-primary bg-primary/10 font-medium"
           : "text-muted-foreground hover:bg-secondary")

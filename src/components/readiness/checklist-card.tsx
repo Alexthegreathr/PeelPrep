@@ -48,7 +48,7 @@ export function ChecklistCard({
                   router.refresh();
                 })
               }
-              className="size-4 shrink-0 rounded border-input accent-[#4d7b55]"
+              className="size-4 shrink-0 rounded border-input accent-success"
               aria-label={item.label}
             />
             <span

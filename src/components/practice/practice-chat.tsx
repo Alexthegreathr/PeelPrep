@@ -22,6 +22,16 @@ import { getVoiceProvider, type SpeakHandle } from "@/lib/voice/provider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { PracticeTurnRow } from "@/lib/data/practice";
 
 export function PracticeChat({
@@ -50,6 +60,12 @@ export function PracticeChat({
 
   const last = turns[turns.length - 1];
   const awaitingAnswer = last?.role === "interviewer";
+
+  // Keep the newest turn and the typing indicator in view.
+  const bottomRef = useRef<HTMLLIElement>(null);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [turns.length, pending]);
 
   function speak(content: string) {
     speakHandle.current?.cancel();
@@ -243,6 +259,7 @@ export function PracticeChat({
             The interviewer is responding…
           </li>
         ) : null}
+        <li ref={bottomRef} aria-hidden="true" />
       </ol>
 
       {error ? (
@@ -318,20 +335,46 @@ export function PracticeChat({
               )}
             </div>
             <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={pending}
-                onClick={() =>
-                  startTransition(async () => {
-                    await endPracticeSessionAction(interviewId, sessionId);
-                    router.refresh();
-                  })
-                }
-              >
-                End session
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={pending}
+                  >
+                    End session
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>End this session?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You won&apos;t be able to add more answers. You&apos;ll
+                      get your feedback and can review the full session
+                      afterward.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep going</AlertDialogCancel>
+                    <Button
+                      type="button"
+                      disabled={pending}
+                      onClick={() =>
+                        startTransition(async () => {
+                          await endPracticeSessionAction(
+                            interviewId,
+                            sessionId,
+                          );
+                          router.refresh();
+                        })
+                      }
+                    >
+                      End practice session
+                    </Button>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               <Button
                 type="button"
                 onClick={submit}

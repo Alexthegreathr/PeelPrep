@@ -36,30 +36,42 @@ export function ConsentToggle({
 }) {
   const [granted, setGranted] = useState(initial);
   const [pending, startTransition] = useTransition();
+  const [failed, setFailed] = useState(false);
 
   return (
-    <div className="flex items-start justify-between gap-4 py-3">
-      <div className="flex flex-col">
-        <span className="text-sm font-medium">{label}</span>
-        <span className="text-xs text-muted-foreground">{description}</span>
+    <div className="flex flex-col gap-2 py-3">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col">
+          <span className="text-sm font-medium">{label}</span>
+          <span className="text-xs text-muted-foreground">{description}</span>
+        </div>
+        <label className="flex shrink-0 items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={granted}
+            disabled={pending}
+            onChange={(e) => {
+              const next = e.target.checked;
+              setGranted(next);
+              setFailed(false);
+              startTransition(async () => {
+                const res = await updateConsent(type, next);
+                if (res && !res.ok) {
+                  setGranted(!next);
+                  setFailed(true);
+                }
+              });
+            }}
+            className="size-4 rounded border-input accent-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          {granted ? "On" : "Off"}
+        </label>
       </div>
-      <label className="flex shrink-0 items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={granted}
-          disabled={pending}
-          onChange={(e) => {
-            const next = e.target.checked;
-            setGranted(next);
-            startTransition(async () => {
-              const res = await updateConsent(type, next);
-              if (res && !res.ok) setGranted(!next);
-            });
-          }}
-          className="size-4 rounded border-input accent-[#4d7b55]"
-        />
-        {granted ? "On" : "Off"}
-      </label>
+      {failed ? (
+        <p className="text-xs text-destructive">
+          Couldn&apos;t update this setting. Please try again.
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
   uniqueEmail,
   seedPreparingInterview,
   grantVdaConsents,
+  makeUserPro,
 } from "./helpers/auth";
 
 const PASSWORD = "peelprep123";
@@ -21,6 +22,8 @@ test.describe("mock practice", () => {
   test.beforeAll(async () => {
     email = uniqueEmail("practice");
     userId = await createConfirmedUser(email, PASSWORD);
+    // Pro plan so both tests here have practice-session quota (free = 1/period).
+    await makeUserPro(userId);
     interviewId = await seedPreparingInterview(userId);
   });
   test.afterAll(async () => {
@@ -39,7 +42,7 @@ test.describe("mock practice", () => {
     await page.getByRole("button", { name: /start practice/i }).click();
 
     // Lands in the session with the first interviewer question.
-    await expect(page).toHaveURL(/\/practice\/[0-9a-f-]+$/);
+    await expect(page).toHaveURL(/\/practice\/[0-9a-f-]+$/, { timeout: 20000 });
     await expect(page.getByText("Interviewer").first()).toBeVisible({
       timeout: 20000,
     });
@@ -57,8 +60,9 @@ test.describe("mock practice", () => {
       timeout: 20000,
     });
 
-    // End the session and review.
+    // End the session and review (confirm in the dialog).
     await page.getByRole("button", { name: "End session" }).click();
+    await page.getByRole("button", { name: "End practice session" }).click();
     await expect(
       page.getByRole("heading", { name: /session review/i }),
     ).toBeVisible();
@@ -84,7 +88,7 @@ test.describe("mock practice", () => {
     await page.goto(`/interviews/${interviewId}/practice`);
     await page.getByLabel("Questions").fill("1");
     await page.getByRole("button", { name: /start practice/i }).click();
-    await expect(page).toHaveURL(/\/practice\/[0-9a-f-]+$/);
+    await expect(page).toHaveURL(/\/practice\/[0-9a-f-]+$/, { timeout: 20000 });
 
     // The synthetic avatar interviewer is present, with a voice toggle.
     await expect(page.getByText(/AI interviewer/i)).toBeVisible({

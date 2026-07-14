@@ -64,6 +64,11 @@ export default async function DashboardPage() {
   // Prompt to record an outcome for an interview whose date has passed.
   const pastInterview = findOutcomePrompt(upcoming);
 
+  // The featured interview is shown on its own; don't repeat it in the list.
+  const rest = upcoming.filter((i) => i.id !== next.id);
+  const showUpcoming = rest.length > 0;
+  const showBriefs = recentBriefs.length > 0;
+
   return (
     <div>
       <PageHeader
@@ -75,7 +80,7 @@ export default async function DashboardPage() {
       />
 
       {pastInterview ? (
-        <Card className="mb-6 border-[#4d7b55]/40 bg-[#4d7b55]/5">
+        <Card className="mb-6 border-success/40 bg-success/5">
           <CardContent className="flex flex-col gap-2 pt-6 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm">
               How did your interview with{" "}
@@ -160,7 +165,7 @@ export default async function DashboardPage() {
         <Card className="mt-6">
           <CardContent className="flex items-start gap-3 pt-6 text-sm">
             <Lightbulb
-              className="mt-0.5 size-4 shrink-0 text-[#7b4b20]"
+              className="mt-0.5 size-4 shrink-0 text-warning"
               aria-hidden="true"
             />
             <div>
@@ -190,7 +195,13 @@ export default async function DashboardPage() {
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
                     <div
-                      className="h-full bg-primary"
+                      className={
+                        m.used >= m.limit
+                          ? "h-full bg-warning"
+                          : pct >= 80
+                            ? "h-full bg-warning/70"
+                            : "h-full bg-primary"
+                      }
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -215,46 +226,52 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <section>
-          <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            Upcoming
-          </h2>
-          <ul className="flex flex-col gap-2">
-            {upcoming.map((interview) => (
-              <li key={interview.id}>
-                <Link
-                  href={`/interviews/${interview.id}`}
-                  className="flex items-center justify-between gap-4 rounded-lg border p-4 transition-colors hover:bg-secondary/50"
-                >
-                  <div className="min-w-0">
-                    <p className="flex items-center gap-2 font-medium">
-                      <span className="truncate">
-                        {interview.company_name || "Untitled interview"}
-                      </span>
-                      <Badge
-                        variant={
-                          interview.status === "draft" ? "outline" : "secondary"
-                        }
-                      >
-                        {STATUS_LABELS[interview.status] ?? interview.status}
-                      </Badge>
-                    </p>
-                    <p className="truncate text-sm text-muted-foreground">
-                      {interview.position_title || "Position not set"}
-                    </p>
-                  </div>
-                  <ChevronRight
-                    className="size-5 shrink-0 text-muted-foreground"
-                    aria-hidden="true"
-                  />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
+      <div
+        className={`mt-6 grid gap-6 ${showUpcoming && showBriefs ? "lg:grid-cols-2" : ""}`}
+      >
+        {showUpcoming ? (
+          <section>
+            <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
+              Upcoming
+            </h2>
+            <ul className="flex flex-col gap-2">
+              {rest.map((interview) => (
+                <li key={interview.id}>
+                  <Link
+                    href={`/interviews/${interview.id}`}
+                    className="flex items-center justify-between gap-4 rounded-lg border p-4 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <div className="min-w-0">
+                      <p className="flex items-center gap-2 font-medium">
+                        <span className="truncate">
+                          {interview.company_name || "Untitled interview"}
+                        </span>
+                        <Badge
+                          variant={
+                            interview.status === "draft"
+                              ? "outline"
+                              : "secondary"
+                          }
+                        >
+                          {STATUS_LABELS[interview.status] ?? interview.status}
+                        </Badge>
+                      </p>
+                      <p className="truncate text-sm text-muted-foreground">
+                        {interview.position_title || "Position not set"}
+                      </p>
+                    </div>
+                    <ChevronRight
+                      className="size-5 shrink-0 text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
-        {recentBriefs.length > 0 ? (
+        {showBriefs ? (
           <section>
             <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
               Recent Peel Briefs
@@ -264,7 +281,7 @@ export default async function DashboardPage() {
                 <li key={b.interviewId}>
                   <Link
                     href={`/interviews/${b.interviewId}/brief`}
-                    className="flex items-center justify-between gap-4 rounded-lg border p-4 transition-colors hover:bg-secondary/50"
+                    className="flex items-center justify-between gap-4 rounded-lg border p-4 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <span className="truncate font-medium">{b.company}</span>
                     <span className="text-xs text-muted-foreground">

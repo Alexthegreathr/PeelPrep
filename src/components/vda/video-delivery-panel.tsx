@@ -465,7 +465,7 @@ function Recorder({
             type="checkbox"
             checked={allowTranscription}
             onChange={(e) => setAllowTranscription(e.target.checked)}
-            className="mt-0.5 size-4 rounded border-input accent-[#4d7b55]"
+            className="mt-0.5 size-4 rounded border-input accent-success"
           />
           <span>
             Generate a private transcript for speaking-pace and filler-word
@@ -706,7 +706,7 @@ function PresenceSummaryBlock({
   const bands = summary?.bands ?? [];
   if (bands.length === 0) return null;
   const dot: Record<PresenceBandView["status"], string> = {
-    in_range: "bg-emerald-500",
+    in_range: "bg-success",
     worth_a_look: "bg-amber-500",
     unmeasured: "bg-muted-foreground/40",
   };

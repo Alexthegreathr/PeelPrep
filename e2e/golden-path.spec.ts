@@ -118,6 +118,7 @@ test.describe("golden path", () => {
       timeout: 20000,
     });
     await page.getByRole("button", { name: "End session" }).click();
+    await page.getByRole("button", { name: "End practice session" }).click();
     await page.getByRole("button", { name: /get feedback/i }).click();
     await expect(page.getByText(/top improvement/i)).toBeVisible({
       timeout: 20000,
