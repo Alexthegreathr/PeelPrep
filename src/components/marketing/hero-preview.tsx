@@ -92,7 +92,7 @@ function BriefRow({
 }) {
   return (
     <div className="flex items-center gap-3 rounded-lg border bg-background/60 px-3 py-2.5">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-accent-foreground">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 text-accent-foreground">
         {icon}
       </span>
       <div className="min-w-0 flex-1">
@@ -120,6 +120,12 @@ function Ring({ value }: { value: number }) {
   return (
     <div className="relative flex size-24 items-center justify-center">
       <svg width="96" height="96" className="-rotate-90" aria-hidden="true">
+        <defs>
+          <linearGradient id="heroRing" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#7bc088" />
+            <stop offset="100%" stopColor="#4d7b55" />
+          </linearGradient>
+        </defs>
         <circle
           cx="48"
           cy="48"
@@ -135,7 +141,7 @@ function Ring({ value }: { value: number }) {
           fill="none"
           strokeWidth="9"
           strokeLinecap="round"
-          stroke="var(--color-success)"
+          stroke="url(#heroRing)"
           strokeDasharray={c}
           strokeDashoffset={offset}
         />

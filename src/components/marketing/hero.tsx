@@ -24,7 +24,7 @@ export function Hero() {
 
         <h1 className="text-5xl leading-[1.02] font-medium text-balance motion-safe:animate-[fade-up_.6s_ease-out_.08s_both] sm:text-6xl md:text-7xl">
           Know the room.{" "}
-          <span className="text-accent-foreground italic">
+          <span className="bg-gradient-to-r from-[#7b4b20] via-[#b06f2b] to-[#d99a3a] bg-clip-text text-transparent italic">
             Own the interview.
           </span>
         </h1>

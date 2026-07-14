@@ -145,7 +145,11 @@ export default async function ReadinessPage(
                       max={1}
                       delayMs={idx * 60}
                       className="my-1.5 h-1"
-                      fillClassName={full ? "bg-success" : "bg-primary"}
+                      fillClassName={
+                        full
+                          ? "bg-gradient-to-r from-[#7bc088] to-success"
+                          : "bg-gradient-to-r from-primary to-[#f5c200]"
+                      }
                     />
                     <span className="text-xs text-muted-foreground">
                       {c.explanation}

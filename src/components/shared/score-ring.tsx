@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 /**
  * Animated readiness ring: an SVG progress circle that fills to `score` while
@@ -46,12 +46,14 @@ export function ScoreRing({
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const offset = c * (1 - shown / 100);
-  const color =
+  const gradId = useId();
+  // Gradient stops per score band (light → deep), for a richer ring.
+  const [from, to] =
     clamped >= 70
-      ? "var(--color-success, #4d7b55)"
+      ? ["#7bc088", "#4d7b55"]
       : clamped >= 40
-        ? "var(--color-primary, #ffd21f)"
-        : "var(--color-warning, #7b4b20)";
+        ? ["#ffe27a", "#f2b800"]
+        : ["#c58a4e", "#7b4b20"];
 
   return (
     <div
@@ -61,6 +63,12 @@ export function ScoreRing({
       aria-label={`Readiness ${clamped} ${label}`}
     >
       <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor={from} />
+            <stop offset="100%" stopColor={to} />
+          </linearGradient>
+        </defs>
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -76,10 +84,9 @@ export function ScoreRing({
           fill="none"
           strokeWidth={stroke}
           strokeLinecap="round"
-          stroke={color}
+          stroke={`url(#${gradId})`}
           strokeDasharray={c}
           strokeDashoffset={offset}
-          style={{ transition: "stroke 300ms ease" }}
         />
       </svg>
       <div className="absolute flex flex-col items-center">

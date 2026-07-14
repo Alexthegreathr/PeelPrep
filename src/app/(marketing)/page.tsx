@@ -77,7 +77,7 @@ export default function LandingPage() {
                 className="group relative flex flex-col gap-3 rounded-2xl border bg-card p-6 shadow-sm transition-transform hover:-translate-y-1"
               >
                 <div className="flex items-center justify-between">
-                  <span className="flex size-11 items-center justify-center rounded-xl bg-primary/15 text-accent-foreground">
+                  <span className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/30 to-accent/20 text-accent-foreground">
                     {step.icon}
                   </span>
                   <span className="font-heading text-4xl font-semibold text-primary/30 tabular-nums">
@@ -288,7 +288,7 @@ function Feature({
 }) {
   return (
     <div className="group flex flex-col gap-3 rounded-2xl border bg-card p-6 shadow-sm transition-transform hover:-translate-y-1">
-      <div className="flex size-11 items-center justify-center rounded-xl bg-primary/15 text-accent-foreground transition-transform group-hover:scale-105">
+      <div className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/30 to-accent/20 text-accent-foreground transition-transform group-hover:scale-105">
         {icon}
       </div>
       <h3 className="font-heading text-lg font-semibold">{title}</h3>

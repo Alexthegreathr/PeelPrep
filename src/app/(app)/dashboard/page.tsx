@@ -129,7 +129,7 @@ export default async function DashboardPage() {
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="border-primary/30 bg-primary/5 lg:col-span-2">
+        <Card className="border-primary/30 bg-gradient-to-br from-primary/12 via-card to-card lg:col-span-2">
           <CardHeader className="border-b border-primary/20">
             <CardTitle className="flex items-center gap-2 text-base">
               <CalendarClock className="size-4" aria-hidden="true" /> Next up
@@ -209,7 +209,7 @@ export default async function DashboardPage() {
       <Card className="mt-6">
         <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-foreground">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 text-foreground">
               <Video className="size-4" aria-hidden="true" />
             </span>
             <div>
@@ -249,10 +249,10 @@ export default async function DashboardPage() {
                     max={Math.max(1, m.limit)}
                     fillClassName={
                       m.used >= m.limit
-                        ? "bg-warning"
+                        ? "bg-gradient-to-r from-[#a56a35] to-warning"
                         : pct >= 80
-                          ? "bg-warning/70"
-                          : "bg-primary"
+                          ? "bg-gradient-to-r from-warning/60 to-warning"
+                          : "bg-gradient-to-r from-primary to-[#f5c200]"
                     }
                   />
                 </div>
