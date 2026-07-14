@@ -3,6 +3,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 
 import { getSupabasePublicConfig } from "@/lib/supabase/env";
+import type { Database } from "@/types/database";
 
 /**
  * Browser Supabase client for Client Components (anon key only — RLS-scoped).
@@ -11,5 +12,5 @@ import { getSupabasePublicConfig } from "@/lib/supabase/env";
  */
 export function createSupabaseBrowserClient() {
   const { url, anonKey } = getSupabasePublicConfig();
-  return createBrowserClient(url, anonKey);
+  return createBrowserClient<Database>(url, anonKey);
 }

@@ -15,6 +15,16 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type RateLimitAction = "login" | "signup" | "reset";
 
+/** Windows for authenticated per-user actions (SECURITY.md §7). */
+export const RATE_LIMITS = {
+  upload: { windowSeconds: 3600, maxHits: 20 }, // 20 / hour
+  ai_generate: { windowSeconds: 60, maxHits: 10 }, // 10 / min
+  export: { windowSeconds: 86400, maxHits: 1 }, // 1 / day
+  account_delete: { windowSeconds: 86400, maxHits: 3 }, // 3 / day
+} as const;
+
+export type UserRateLimitAction = keyof typeof RATE_LIMITS;
+
 /** login / signup / reset: 10 hits per 15 minutes (SECURITY.md §7 table). */
 const AUTH_WINDOW_SECONDS = 15 * 60;
 const AUTH_MAX_HITS = 10;
@@ -62,6 +72,22 @@ async function hitRateLimit(
     console.error("rate-limit check failed (allowing request)", error);
     return true;
   }
+}
+
+/**
+ * Rate-limit an authenticated per-user action (uploads, AI, export, deletion).
+ * Returns true when allowed. Keyed by the salted-hashed user id.
+ */
+export async function checkUserRateLimit(
+  userId: string,
+  action: UserRateLimitAction,
+): Promise<boolean> {
+  const { windowSeconds, maxHits } = RATE_LIMITS[action];
+  return hitRateLimit(
+    `user:${hashIdentifier(userId)}:${action}`,
+    windowSeconds,
+    maxHits,
+  );
 }
 
 /**

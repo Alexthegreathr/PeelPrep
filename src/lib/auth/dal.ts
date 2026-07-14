@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { notFound, redirect } from "next/navigation";
-import type { User } from "@supabase/supabase-js";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -58,18 +58,22 @@ export async function requireOwner<T extends OwnedRow = OwnedRow>(
   const user = await requireUser();
   const supabase = await createSupabaseServerClient();
 
-  const { data, error } = await supabase
+  // Generic over a dynamic table name — use an untyped view so the query
+  // builder accepts a string relation. Ownership is re-checked below.
+  const db = supabase as unknown as SupabaseClient;
+  const { data, error } = await db
     .from(table)
     .select(columns)
     .eq("id", id)
-    .maybeSingle<T>();
+    .maybeSingle();
 
   if (error || !data) notFound();
+  const row = data as unknown as T;
   // RLS already scopes reads to the owner; this re-check is defense in depth
   // for tables that denormalize user_id (DATABASE.md conventions).
-  if (typeof data.user_id === "string" && data.user_id !== user.id) notFound();
+  if (typeof row.user_id === "string" && row.user_id !== user.id) notFound();
 
-  return data;
+  return row;
 }
 
 export type Profile = {
@@ -78,6 +82,7 @@ export type Profile = {
   headline: string | null;
   timezone: string;
   role: "user" | "admin";
+  default_resume_id: string | null;
   onboarding_completed_at: string | null;
   created_at: string;
   updated_at: string;

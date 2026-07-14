@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { requireUser, getProfile } from "@/lib/auth/dal";
+import { listDocuments } from "@/lib/data/documents";
 import { PageHeader } from "@/components/app/page-header";
 import {
   Card,
@@ -9,14 +10,15 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ProfileForm } from "@/app/(app)/profile/profile-form";
+import { DocumentManager } from "@/components/documents/document-manager";
 
 export const metadata: Metadata = { title: "Profile" };
 
 export default async function ProfilePage() {
   const user = await requireUser();
   const profile = await getProfile();
+  const documents = await listDocuments();
 
   return (
     <div>
@@ -44,18 +46,20 @@ export default async function ProfilePage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-secondary/30">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between gap-2">
-              Document library
-              <Badge variant="outline">Later phase</Badge>
-            </CardTitle>
+        <Card>
+          <CardHeader className="border-b">
+            <CardTitle>Document library</CardTitle>
             <CardDescription>
-              Résumés and other materials you upload will appear here, reusable
-              across every interview. Uploads arrive with the interviews &amp;
-              documents phase.
+              Résumés and other materials, reusable across every interview.
+              Files are private and stored securely; only you can access them.
             </CardDescription>
           </CardHeader>
+          <CardContent className="pt-6">
+            <DocumentManager
+              initialDocuments={documents}
+              defaultResumeId={profile?.default_resume_id ?? null}
+            />
+          </CardContent>
         </Card>
       </div>
     </div>
