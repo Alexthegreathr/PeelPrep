@@ -8,8 +8,6 @@ describe("Hero", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: /know the room/i }),
     ).toBeDefined();
-    expect(
-      screen.getByText(/personalized briefing, practice plan/i),
-    ).toBeDefined();
+    expect(screen.getByText(/one personalized briefing/i)).toBeDefined();
   });
 });
