@@ -9,9 +9,8 @@ import { buildContextInput } from "@/lib/ai/context";
 import { TASK_SCHEMAS } from "@/lib/ai/schemas";
 import { reserveUsage, settleUsage } from "@/lib/usage/ledger";
 import { usagePeriod, featureLimit } from "@/lib/usage/features";
-import { effectivePlanKey, getPlan } from "@/lib/billing/plans";
+import { planForUser } from "@/lib/billing/resolve";
 import { loadSourceBlocks } from "@/lib/brief/sources";
-import type { SubscriptionRow } from "@/lib/data/types";
 import {
   BRIEF_STEPS,
   SECTION_ORDER,
@@ -264,31 +263,12 @@ async function finalizeBrief(
 }
 
 /** Generate one step of the brief. Drives the resumable queue. */
-/** Read the subscription by user id via admin (no request/cookie context). */
-async function planForUser(userId: string): Promise<{
-  subscription: SubscriptionRow | null;
-  planKey: ReturnType<typeof effectivePlanKey>;
-}> {
-  const admin = createSupabaseAdminClient();
-  const { data } = await admin
-    .from("subscriptions")
-    .select("*")
-    .eq("user_id", userId)
-    .maybeSingle();
-  const subscription = data ?? null;
-  return {
-    subscription,
-    planKey: subscription ? effectivePlanKey(subscription) : "free",
-  };
-}
-
 export async function generateNextSection(
   interviewId: string,
   userId: string,
 ): Promise<BriefProgress> {
   const admin = createSupabaseAdminClient();
-  const { subscription, planKey } = await planForUser(userId);
-  const entitlements = getPlan(planKey);
+  const { subscription, entitlements } = await planForUser(userId);
   const depth = entitlements.briefDepth;
 
   const existingBrief = await admin
@@ -398,8 +378,7 @@ export async function regenerateSection(
 ): Promise<BriefProgress> {
   const admin = createSupabaseAdminClient();
   const step = stepForSection(sectionKey);
-  const { subscription, planKey } = await planForUser(userId);
-  const entitlements = getPlan(planKey);
+  const { subscription, entitlements } = await planForUser(userId);
 
   const { data: brief } = await admin
     .from("peel_briefs")

@@ -10,6 +10,7 @@ import { getEffectivePlan } from "@/lib/data/subscription";
 import { getResearchProvider } from "@/lib/research/providers";
 import { RESEARCH_UNAVAILABLE_NOTE } from "@/lib/research/provider";
 import { PageHeader } from "@/components/app/page-header";
+import { InterviewSubnav } from "@/components/interviews/interview-subnav";
 import { BriefGenerator } from "@/components/brief/brief-generator";
 import { BriefSectionCard } from "@/components/brief/brief-section-card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -61,6 +62,7 @@ export default async function BriefPage(
           title="Peel Brief"
           description={`${interview.company_name || "Your interview"} · ${interview.position_title || ""}`}
         />
+        <InterviewSubnav interviewId={id} active="brief" />
         <Card className="max-w-2xl">
           <CardHeader>
             <CardTitle>Generate your Peel Brief</CardTitle>
@@ -96,6 +98,7 @@ export default async function BriefPage(
           </Button>
         }
       />
+      <InterviewSubnav interviewId={id} active="brief" />
 
       <div className="mb-6 flex flex-col gap-3">
         <Alert>

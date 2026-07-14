@@ -205,9 +205,16 @@ export function InterviewHub({
               <Sparkles aria-hidden="true" /> Peel Brief
             </Link>
           </Button>
+          <Button asChild variant="outline">
+            <Link href={`/interviews/${interview.id}/questions`}>
+              Questions
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/interviews/${interview.id}/stories`}>Story bank</Link>
+          </Button>
           <span className="self-center text-sm text-muted-foreground">
-            Questions, stories, practice, and readiness arrive in the next
-            phases.
+            Practice and readiness arrive in the next phases.
           </span>
         </CardContent>
       </Card>

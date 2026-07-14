@@ -31,3 +31,18 @@ export const STATUS_LABELS: Record<string, string> = {
   completed: "Completed",
   archived: "Archived",
 };
+
+export const QUESTION_CATEGORY_LABELS: Record<string, string> = {
+  introductory: "Introductory",
+  behavioral: "Behavioral",
+  situational: "Situational",
+  role_specific: "Role-specific",
+  technical: "Technical",
+  company_specific: "Company-specific",
+  interviewer_informed: "Interviewer-informed",
+  motivation_fit: "Motivation & fit",
+  leadership: "Leadership",
+  conflict: "Conflict",
+  failure: "Failure",
+  closing: "Closing",
+};
