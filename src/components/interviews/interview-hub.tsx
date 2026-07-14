@@ -216,9 +216,11 @@ export function InterviewHub({
           <Button asChild variant="outline">
             <Link href={`/interviews/${interview.id}/practice`}>Practice</Link>
           </Button>
-          <span className="self-center text-sm text-muted-foreground">
-            Readiness scoring arrives in the next phase.
-          </span>
+          <Button asChild variant="outline">
+            <Link href={`/interviews/${interview.id}/readiness`}>
+              Readiness
+            </Link>
+          </Button>
         </CardContent>
       </Card>
 
