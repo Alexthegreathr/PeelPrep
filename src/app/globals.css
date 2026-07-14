@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display), var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -56,7 +56,8 @@
   /* PeelPrep palette (docs/PRODUCT_SPEC.md §Design Direction):
      yellow #FFD21F, navy #13213C, cream #FFF8DF, green #4D7B55,
      brown #7B4B20, gray #667085, light border #E8DDB5 */
-  --background: #ffffff;
+  /* Warm off-white canvas so white cards read as elevated (chosen, not default). */
+  --background: #fffdf6;
   --foreground: #13213c;
   --card: #ffffff;
   --card-foreground: #13213c;
@@ -139,10 +140,54 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    /* Faint warm ambient glow behind everything, for depth. */
+    background:
+      radial-gradient(
+        1100px 520px at 100% -8%,
+        color-mix(in oklch, var(--primary) 9%, transparent),
+        transparent 60%
+      ),
+      var(--background);
+    background-attachment: fixed;
   }
   html {
     @apply font-sans;
+  }
+  /* Subtle, on-brand scrollbar. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--foreground) 22%, transparent)
+      transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--foreground) 18%, transparent);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklch, var(--foreground) 32%, transparent);
+    background-clip: content-box;
+  }
+  /* Display serif for the large headings; keeps small headings on the sans. */
+  h1,
+  h2 {
+    @apply font-heading;
+    letter-spacing: -0.015em;
+  }
+  /* Warm-tinted selection + smoother interactive feel across the app. */
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 40%, transparent);
+    color: var(--foreground);
+  }
+  a,
+  button {
+    @apply transition-colors;
   }
 }
 

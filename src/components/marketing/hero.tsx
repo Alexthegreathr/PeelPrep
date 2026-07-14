@@ -19,9 +19,11 @@ export function Hero() {
       >
         Beta in development
       </Badge>
-      <h1 className="text-5xl font-semibold tracking-tight text-balance motion-safe:animate-[fade-up_.6s_ease-out_.08s_both] sm:text-6xl">
+      <h1 className="text-5xl font-medium text-balance motion-safe:animate-[fade-up_.6s_ease-out_.08s_both] sm:text-6xl">
         Know the room.{" "}
-        <span className="text-accent-foreground">Own the interview.</span>
+        <span className="text-accent-foreground italic">
+          Own the interview.
+        </span>
       </h1>
       <p className="max-w-xl text-lg text-muted-foreground text-pretty motion-safe:animate-[fade-up_.6s_ease-out_.16s_both]">
         PeelPrep turns scattered interview research into a personalized
