@@ -44,3 +44,7 @@ next-env.d.ts
 
 # Track the safe environment template
 !.env.example
+
+# Local Supabase CLI state
+supabase/.branches/
+supabase/.temp/
