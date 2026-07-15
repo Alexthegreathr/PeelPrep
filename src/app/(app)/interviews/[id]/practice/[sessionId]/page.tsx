@@ -44,11 +44,45 @@ export default async function SessionPage(
   const voiceAnswersAvailable =
     consents.vda_microphone && consents.vda_media_upload;
 
+  // A completed session with no mock turns is "delivery-only" — jump straight
+  // to the camera/VDA screen instead of showing an empty review.
+  const deliveryOnly = !inProgress && turns.length === 0;
+
+  const deliveryPanel =
+    plan && consents ? (
+      <div id="delivery-analysis" className="scroll-mt-6">
+        <VideoDeliveryPanel
+          interviewId={id}
+          sessionId={sessionId}
+          isPro={plan.planKey === "pro"}
+          consents={{
+            vda_camera: consents.vda_camera,
+            vda_microphone: consents.vda_microphone,
+            vda_recording: consents.vda_recording,
+            vda_media_upload: consents.vda_media_upload,
+            vda_ai_analysis: consents.vda_ai_analysis,
+          }}
+          analyses={analyses}
+          transcriptionIsMock={isMockTranscription()}
+        />
+      </div>
+    ) : null;
+
   return (
     <div>
       <PageHeader
-        title={inProgress ? "Practice in progress" : "Session review"}
-        description="Typed mock interview"
+        title={
+          inProgress
+            ? "Practice in progress"
+            : deliveryOnly
+              ? "Video Delivery Analysis"
+              : "Session review"
+        }
+        description={
+          deliveryOnly
+            ? "Optional, on-device delivery coaching — pacing, framing, posture. Nothing about the video leaves your browser."
+            : "Typed mock interview"
+        }
         action={
           <Button asChild variant="ghost" size="sm">
             <Link href={`/interviews/${id}/practice`}>
@@ -66,6 +100,8 @@ export default async function SessionPage(
           voiceAnswersAvailable={voiceAnswersAvailable}
           transcriptionIsMock={transcriptionIsMock}
         />
+      ) : deliveryOnly ? (
+        deliveryPanel
       ) : (
         <div className="flex flex-col gap-4">
           {summary ? (
@@ -111,24 +147,7 @@ export default async function SessionPage(
             })}
           </ol>
 
-          {plan && consents ? (
-            <div id="delivery-analysis" className="scroll-mt-6">
-              <VideoDeliveryPanel
-                interviewId={id}
-                sessionId={sessionId}
-                isPro={plan.planKey === "pro"}
-                consents={{
-                  vda_camera: consents.vda_camera,
-                  vda_microphone: consents.vda_microphone,
-                  vda_recording: consents.vda_recording,
-                  vda_media_upload: consents.vda_media_upload,
-                  vda_ai_analysis: consents.vda_ai_analysis,
-                }}
-                analyses={analyses}
-                transcriptionIsMock={isMockTranscription()}
-              />
-            </div>
-          ) : null}
+          {deliveryPanel}
         </div>
       )}
     </div>

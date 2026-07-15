@@ -87,7 +87,7 @@ export default async function DashboardPage() {
       ? {
           href: `/interviews/${lastSession.interviewId}/practice/${lastSession.id}#delivery-analysis`,
           cta: "Analyze my delivery",
-          desc: "Review your last mock interview and get on-device delivery feedback.",
+          desc: "Turn on your camera for on-device delivery feedback — pacing, framing, posture, and eye contact.",
         }
       : {
           href: `/interviews/${next.id}/practice`,

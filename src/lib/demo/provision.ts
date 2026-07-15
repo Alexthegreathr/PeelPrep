@@ -324,4 +324,17 @@ export async function provisionDemoUser(userId: string): Promise<void> {
       sort_order: i,
     })),
   );
+
+  // A completed, turn-less "delivery" session so the dashboard surfaces an
+  // "Analyze my delivery" shortcut that jumps straight to the camera/VDA screen
+  // (the session page renders the recorder directly when a session has no turns).
+  await admin.from("practice_sessions").insert({
+    user_id: userId,
+    interview_id: interview.id,
+    status: "completed",
+    config: { delivery: true },
+    modality: "text",
+    started_at: now,
+    completed_at: now,
+  });
 }
