@@ -48,6 +48,32 @@ async function main() {
   const userId = await getOrCreateUser();
   console.log(`Demo user: ${DEMO_EMAIL} (${userId})`);
 
+  // Unlock every feature for the demo. Video Delivery Analysis is Pro-gated, so
+  // put the demo account on an active Pro plan, and pre-grant the five VDA
+  // consents so the camera/record flow is ready without any Settings setup.
+  await admin
+    .from("subscriptions")
+    .update({ plan_key: "pro", status: "active" })
+    .eq("user_id", userId);
+  const consentNow = new Date().toISOString();
+  await admin.from("user_consents").upsert(
+    [
+      "vda_camera",
+      "vda_microphone",
+      "vda_recording",
+      "vda_media_upload",
+      "vda_ai_analysis",
+    ].map((consent_type) => ({
+      user_id: userId,
+      consent_type,
+      version: "2026-07-13",
+      granted: true,
+      granted_at: consentNow,
+      revoked_at: null,
+    })),
+    { onConflict: "user_id,consent_type,version" },
+  );
+
   // Reset: remove existing demo interviews (cascades their children).
   await admin.from("interviews").delete().eq("user_id", userId);
   await admin

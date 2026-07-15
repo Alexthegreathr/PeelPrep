@@ -49,8 +49,9 @@ next-env.d.ts
 supabase/.branches/
 supabase/.temp/
 
-# On-device vision assets (fetched via scripts/fetch-vision-assets.mjs)
-/public/mediapipe/
+# On-device vision assets (fetched via scripts/fetch-vision-assets.mjs).
+# Committed for the hosted demo so posture/eye-contact analysis works there;
+# regenerate locally with `npm run setup:vision`.
 
 # Visual-polish audit screenshots (local only)
 .screenshots/
