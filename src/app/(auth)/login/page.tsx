@@ -31,12 +31,20 @@ export default async function LoginPage(props: PageProps<"/login">) {
     : searchParams.error;
   const linkError = errorKey ? LINK_ERRORS[errorKey] : undefined;
 
+  // In the public demo build, "Try the demo" is the only entry — hide the
+  // email login/signup (email confirmation isn't wired up for the preview).
+  const demoOnly = process.env.NEXT_PUBLIC_DEMO_MODE === "1";
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {demoOnly ? "Try PeelPrep" : "Welcome back"}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          Sign in to continue preparing.
+          {demoOnly
+            ? "Tap below to explore the demo — no sign-up needed."
+            : "Sign in to continue preparing."}
         </p>
       </div>
 
@@ -60,17 +68,21 @@ export default async function LoginPage(props: PageProps<"/login">) {
 
       <DemoSignInBlock />
 
-      <LoginForm next={next} />
+      {!demoOnly ? (
+        <>
+          <LoginForm next={next} />
 
-      <p className="text-center text-sm text-muted-foreground">
-        New to PeelPrep?{" "}
-        <Link
-          href="/signup"
-          className="font-medium text-foreground underline-offset-4 hover:underline"
-        >
-          Create an account
-        </Link>
-      </p>
+          <p className="text-center text-sm text-muted-foreground">
+            New to PeelPrep?{" "}
+            <Link
+              href="/signup"
+              className="font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              Create an account
+            </Link>
+          </p>
+        </>
+      ) : null}
     </div>
   );
 }
