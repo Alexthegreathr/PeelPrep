@@ -35,6 +35,7 @@ export function DocumentUploader({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const fileId = useId();
   const kindId = useId();
@@ -66,6 +67,7 @@ export function DocumentUploader({
       }
       onUploaded?.(result.document);
       form.reset();
+      setFileName(null);
     });
   }
 
@@ -88,17 +90,27 @@ export function DocumentUploader({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor={fileId}>File</Label>
-        <Input
-          id={fileId}
-          name="file"
-          type="file"
-          accept={ACCEPTED_UPLOAD_EXTENSIONS.join(",")}
-          required
-          className="cursor-pointer file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1 file:text-sm"
-        />
-        <p className="text-xs text-muted-foreground">
-          PDF, DOCX, TXT, or MD · up to 5 MB
-        </p>
+        <label
+          htmlFor={fileId}
+          className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-input bg-secondary/20 px-4 py-6 text-center transition-colors hover:border-ring hover:bg-secondary/40 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50"
+        >
+          <Upload className="size-5 text-muted-foreground" aria-hidden="true" />
+          <span className="text-sm font-medium">
+            {fileName ?? "Choose a file to upload"}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            PDF, DOCX, TXT, or MD · up to 5 MB
+          </span>
+          <input
+            id={fileId}
+            name="file"
+            type="file"
+            accept={ACCEPTED_UPLOAD_EXTENSIONS.join(",")}
+            required
+            onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+            className="sr-only"
+          />
+        </label>
       </div>
 
       {showKind ? (

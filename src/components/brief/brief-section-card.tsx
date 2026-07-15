@@ -3,14 +3,26 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
+  Briefcase,
+  Building2,
+  CalendarClock,
   Check,
   Copy,
+  FileText,
+  HelpCircle,
+  Lightbulb,
+  ListChecks,
   Loader2,
+  MessagesSquare,
   NotebookPen,
   RefreshCw,
+  Sparkles,
+  Target,
   ThumbsDown,
   ThumbsUp,
   TriangleAlert,
+  Users,
+  type LucideIcon,
 } from "lucide-react";
 
 import {
@@ -23,6 +35,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
+import { cn } from "@/lib/utils";
 import { sectionToPlainText } from "@/lib/brief/render";
 import { SECTION_TITLES, type BriefSectionKey } from "@/lib/brief/plan";
 import { formatDate } from "@/lib/format";
@@ -31,6 +44,20 @@ import type { BriefSection } from "@/lib/data/brief";
 const BASIS_LABEL: Record<string, string> = {
   source: "Grounded in your sources",
   general_knowledge: "Unverified — AI general knowledge, may be outdated",
+};
+
+/** A distinct Lucide mark per section so the dossier reads varied, not uniform. */
+const SECTION_ICONS: Record<string, LucideIcon> = {
+  snapshot: CalendarClock,
+  company_overview: Building2,
+  company_priorities: Target,
+  role_analysis: Briefcase,
+  interviewer_intel: Users,
+  likely_themes: MessagesSquare,
+  questions_to_ask: HelpCircle,
+  risks_gaps: TriangleAlert,
+  next_action: Lightbulb,
+  condensed_summary: ListChecks,
 };
 
 export function BriefSectionCard({
@@ -60,6 +87,35 @@ export function BriefSectionCard({
   const [, startTransition] = useTransition();
   const toast = useToast();
   const completed = Boolean(section.completed_at);
+
+  // Varied-but-consistent treatments by importance and source status, so the
+  // brief reads as a research dossier rather than ten identical cards.
+  const isNextAction = key === "next_action";
+  const isCondensed = key === "condensed_summary";
+  const grounded = basis === "source";
+  const general = basis === "general_knowledge";
+  const Icon = SECTION_ICONS[key] ?? FileText;
+
+  const containerTone = isSnapshot
+    ? "border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card"
+    : isNextAction
+      ? "border-primary/30 bg-primary/5"
+      : isCondensed
+        ? "border-warning/30 bg-secondary/40"
+        : grounded
+          ? "border-l-4 border-l-success/60"
+          : general
+            ? "border-l-4 border-l-warning/50"
+            : "";
+
+  const iconTone =
+    isSnapshot || isNextAction || isCondensed
+      ? "bg-primary/20 text-accent-foreground"
+      : grounded
+        ? "bg-success/12 text-success"
+        : general
+          ? "bg-warning/12 text-warning"
+          : "bg-secondary text-accent-foreground";
 
   async function regenerate() {
     setRegenerating(true);
@@ -95,41 +151,87 @@ export function BriefSectionCard({
   return (
     <section
       id={key}
-      className="scroll-mt-20 rounded-xl border bg-card p-6"
+      className={cn(
+        "scroll-mt-20 rounded-xl border bg-card p-6",
+        containerTone,
+      )}
       aria-labelledby={`${key}-title`}
     >
       <div className="mb-4 flex flex-col gap-3 border-b pb-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <h2 id={`${key}-title`} className="text-lg font-semibold">
+          <div className="flex items-center gap-2.5">
+            <span
+              className={cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                iconTone,
+              )}
+              aria-hidden="true"
+            >
+              <Icon className="size-4" />
+            </span>
+            <h2
+              id={`${key}-title`}
+              className="font-heading text-lg font-semibold"
+            >
               {SECTION_TITLES[key]}
             </h2>
             {completed ? (
-              <Badge variant="secondary" className="gap-1">
+              <Badge
+                variant="outline"
+                className="gap-1 border-success/40 text-success"
+              >
                 <Check className="size-3" aria-hidden="true" /> Done
               </Badge>
             ) : null}
           </div>
-          {section.generated_at ? (
+          {!isSnapshot && section.generated_at ? (
             <span className="text-xs text-muted-foreground">
               Generated {formatDate(section.generated_at)}
             </span>
           ) : null}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {!isSnapshot ? (
-            <Badge variant="outline" className="text-warning">
-              AI-generated preparation guidance
+        <div className="flex flex-wrap items-center gap-1.5">
+          {isSnapshot ? (
+            <Badge variant="outline" className="text-muted-foreground">
+              Your interview details
             </Badge>
-          ) : null}
-          {basis ? (
+          ) : (
+            <Badge
+              variant="outline"
+              className="gap-1 border-warning/40 text-warning"
+            >
+              <Sparkles className="size-3" aria-hidden="true" /> AI guidance
+            </Badge>
+          )}
+          {grounded ? (
+            <Badge
+              variant="outline"
+              className="gap-1 border-success/40 text-success"
+            >
+              <Check className="size-3" aria-hidden="true" /> Grounded in your
+              sources
+            </Badge>
+          ) : general ? (
+            <Badge
+              variant="outline"
+              className="border-warning/40 text-warning"
+              title={BASIS_LABEL.general_knowledge}
+            >
+              Unverified · AI general knowledge
+            </Badge>
+          ) : basis ? (
             <Badge variant="outline">{BASIS_LABEL[basis] ?? basis}</Badge>
           ) : null}
           {section.brief_section_sources.map((s) => {
             const src = s.interview_sources ?? s.saved_sources;
             if (!src) return null;
             return (
-              <Badge key={s.id} variant="secondary" title="Source">
+              <Badge
+                key={s.id}
+                variant="outline"
+                title="Source"
+                className="text-muted-foreground"
+              >
                 {src.title}
               </Badge>
             );

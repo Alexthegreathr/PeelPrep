@@ -1,5 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  BookOpen,
+  FileText,
+  Gauge,
+  MessageSquareText,
+  MessagesSquare,
+  ShieldCheck,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,26 +20,32 @@ export const metadata: Metadata = {
 
 const FEATURES = [
   {
+    icon: FileText,
     title: "The Peel Brief",
     body: "A personalized briefing generated section by section: company overview and priorities, role analysis against your résumé, respectful interviewer context, likely themes, questions to ask, risks to prepare for, and a recommended next action. Every AI section is labeled, timestamped, shows its sources, and marks general knowledge as unverified.",
   },
   {
+    icon: MessagesSquare,
     title: "Predicted questions",
     body: "Likely questions across every category — behavioral, technical, situational, and more — each with why it may be asked, what it evaluates, and a suggested structure. Save the ones you'll practice and link the stories you'll tell. Clearly marked as suggestions, not guarantees.",
   },
   {
+    icon: BookOpen,
     title: "Reusable story bank",
     body: "Build STAR stories once and reuse them across every interview. AI can draft an outline from facts you've provided — it never invents experiences or measurements, and asks you for anything missing.",
   },
   {
+    icon: MessageSquareText,
     title: "Typed mock interviews",
     body: "Practice one question at a time with relevant follow-ups, then get structured feedback on each answer: relevance, clarity, structure, specificity, evidence, and more — describing the answer as delivered, never judging you as a person.",
   },
   {
+    icon: Gauge,
     title: "Transparent readiness score",
     body: "A 0–100 score computed deterministically from your preparation, with an explanation for every category and one recommended next action. It measures readiness, never guarantees an outcome — and a perfect score needs no camera.",
   },
   {
+    icon: ShieldCheck,
     title: "Privacy by design",
     body: "Row-level security, private file storage with signed links, server-enforced limits, full data export, and one-click account deletion. We never train models on your private content.",
   },
@@ -39,7 +53,7 @@ const FEATURES = [
 
 export default function FeaturesPage() {
   return (
-    <div className="mx-auto max-w-5xl px-6 py-16">
+    <div className="mx-auto max-w-6xl px-6 py-16">
       <div className="mb-10 text-center">
         <h1 className="text-4xl font-semibold tracking-tight">
           Everything you need to walk in prepared
@@ -53,7 +67,10 @@ export default function FeaturesPage() {
         {FEATURES.map((f) => (
           <Card key={f.title}>
             <CardHeader>
-              <CardTitle>{f.title}</CardTitle>
+              <span className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/30 to-accent/20 text-accent-foreground">
+                <f.icon className="size-5" aria-hidden="true" />
+              </span>
+              <CardTitle className="mt-3">{f.title}</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               {f.body}

@@ -25,7 +25,7 @@ export function InterviewSubnav({
   return (
     <nav
       aria-label="Interview preparation"
-      className="mb-6 flex flex-nowrap gap-1 overflow-x-auto border-b [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="mb-6 flex flex-nowrap gap-1 overflow-x-auto border-b [scrollbar-width:none] [mask-image:linear-gradient(to_right,#000_calc(100%-1.75rem),transparent)] [&::-webkit-scrollbar]:hidden lg:[mask-image:none]"
     >
       <Link
         href={`/interviews/${interviewId}`}

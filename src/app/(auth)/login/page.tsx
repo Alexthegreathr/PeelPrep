@@ -5,6 +5,7 @@ import { CircleCheck, CircleAlert } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { sanitizeNextPath } from "@/lib/auth/redirect";
 import { LoginForm } from "@/app/(auth)/login/login-form";
+import { DemoSignInBlock } from "@/components/shared/demo-sign-in";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -13,6 +14,8 @@ const LINK_ERRORS: Record<string, string> = {
     "That confirmation link was invalid. Try signing in or request a new one.",
   expired_link:
     "That link has expired or was already used. Request a new one below.",
+  demo_unavailable:
+    "The demo account isn't ready yet. Please try again in a moment.",
 };
 
 export default async function LoginPage(props: PageProps<"/login">) {
@@ -54,6 +57,8 @@ export default async function LoginPage(props: PageProps<"/login">) {
           </AlertDescription>
         </Alert>
       ) : null}
+
+      <DemoSignInBlock />
 
       <LoginForm next={next} />
 

@@ -71,8 +71,8 @@ export function DocumentManager({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-lg border bg-secondary/30 p-4">
-        <h3 className="mb-3 text-sm font-medium">Upload a document</h3>
+      <div className="flex flex-col gap-3">
+        <h3 className="text-sm font-medium">Upload a document</h3>
         <DocumentUploader showKind onUploaded={handleUploaded} />
       </div>
 

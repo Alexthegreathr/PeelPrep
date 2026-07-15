@@ -11,6 +11,7 @@ import {
   deleteStory,
   requestStorySuggestionsAction,
 } from "@/app/(app)/interviews/[id]/stories/actions";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -162,6 +163,16 @@ function StoryCard({
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
+  // STAR completeness at a glance, and tags de-duplicated against skills so the
+  // same term never appears twice in two pill styles.
+  const star = [
+    ["S", "Situation", Boolean(story.situation)],
+    ["T", "Task", Boolean(story.task)],
+    ["A", "Action", Boolean(story.action)],
+    ["R", "Result", Boolean(story.result || story.measurable_result)],
+  ] as const;
+  const skillSet = new Set(story.skills.map((s) => s.toLowerCase()));
+  const uniqueTags = story.tags.filter((t) => !skillSet.has(t.toLowerCase()));
   return (
     <li className="flex flex-col rounded-xl border bg-card p-5">
       <div className="flex items-start justify-between gap-2">
@@ -218,20 +229,42 @@ function StoryCard({
         ) : null}
       </div>
 
-      {(story.skills.length > 0 || story.tags.length > 0) && (
-        <div className="mt-3 flex flex-wrap gap-1">
-          {story.skills.map((s) => (
-            <Badge key={`sk-${s}`} variant="secondary">
-              {s}
-            </Badge>
+      <div className="mt-auto flex flex-col gap-2.5 pt-4">
+        <div className="flex items-center gap-1.5" title="STAR structure">
+          {star.map(([letter, part, present]) => (
+            <span
+              key={letter}
+              aria-label={`${part}${present ? " provided" : " missing"}`}
+              className={cn(
+                "flex size-5 items-center justify-center rounded-full text-[10px] font-semibold",
+                present
+                  ? "bg-success/15 text-success"
+                  : "bg-secondary text-muted-foreground/50",
+              )}
+            >
+              {letter}
+            </span>
           ))}
-          {story.tags.map((t) => (
-            <Badge key={`tag-${t}`} variant="outline">
-              #{t}
-            </Badge>
-          ))}
+          <span className="ml-1 text-xs text-muted-foreground">
+            STAR structure
+          </span>
         </div>
-      )}
+
+        {story.skills.length > 0 || uniqueTags.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {story.skills.map((s) => (
+              <Badge key={`sk-${s}`} variant="secondary">
+                {s}
+              </Badge>
+            ))}
+            {uniqueTags.map((t) => (
+              <Badge key={`tag-${t}`} variant="outline">
+                #{t}
+              </Badge>
+            ))}
+          </div>
+        ) : null}
+      </div>
     </li>
   );
 }

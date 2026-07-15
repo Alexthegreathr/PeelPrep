@@ -50,10 +50,11 @@ test.describe("outcomes & settings", () => {
     });
     await expect(page.getByText("Completed").first()).toBeVisible();
 
-    // Settings: consent toggle + export.
+    // Settings: consent toggle + export. Consent controls are switches
+    // (role="switch"), toggled by click, asserted via aria-checked.
     await page.goto("/settings");
-    const consent = page.getByRole("checkbox").first();
-    await consent.check();
+    const consent = page.getByRole("switch").first();
+    await consent.click();
     await expect(consent).toBeChecked();
 
     await page.getByRole("button", { name: /export my data/i }).click();

@@ -23,6 +23,9 @@ export function AnimatedBar({
   delayMs?: number;
 }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
+  // Any non-zero value keeps a small visible fill so low ratios (e.g. 1/60)
+  // still read as progress rather than an empty track.
+  const target = pct > 0 ? `max(0.375rem, ${pct}%)` : "0%";
   const [ready, setReady] = useState(false);
   const raf = useRef<number | null>(null);
 
@@ -51,7 +54,7 @@ export function AnimatedBar({
           fillClassName,
         )}
         style={{
-          width: `${ready ? pct : 0}%`,
+          width: ready ? target : "0%",
           transitionDelay: `${delayMs}ms`,
         }}
       />

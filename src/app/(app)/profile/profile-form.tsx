@@ -38,7 +38,7 @@ export function ProfileForm({
   const values = { ...defaultValues, ...state.values };
 
   return (
-    <form action={action} className="flex max-w-xl flex-col gap-5" noValidate>
+    <form action={action} className="flex flex-col gap-5" noValidate>
       {state.status === "success" ? (
         <Alert variant="success">
           <CircleCheck aria-hidden="true" />

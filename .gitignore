@@ -51,3 +51,6 @@ supabase/.temp/
 
 # On-device vision assets (fetched via scripts/fetch-vision-assets.mjs)
 /public/mediapipe/
+
+# Visual-polish audit screenshots (local only)
+.screenshots/

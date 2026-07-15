@@ -77,6 +77,33 @@ export async function loginAction(
   redirect(sanitizeNextPath(next));
 }
 
+// ── Demo one-tap sign-in ──────────────────────────────────────────────────
+
+/**
+ * Signs the visitor into the shared demo account with a single tap — no signup.
+ * DEMO-ONLY: guarded by NEXT_PUBLIC_DEMO_MODE so it never exists in a real
+ * deployment. Uses fixed, well-known demo credentials (overridable via env) and
+ * deliberately skips the per-email rate limit, since every visitor logs into
+ * the same account. Requires the demo account to be seeded (scripts/seed-demo).
+ */
+export async function startDemoSessionAction(): Promise<void> {
+  if (process.env.NEXT_PUBLIC_DEMO_MODE !== "1") {
+    redirect("/login");
+  }
+
+  const email = process.env.DEMO_EMAIL ?? "demo@peelprep.example";
+  const password = process.env.DEMO_PASSWORD ?? "peelprep-demo-123";
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    redirect("/login?error=demo_unavailable");
+  }
+
+  redirect("/dashboard");
+}
+
 // ── Signup ───────────────────────────────────────────────────────────────
 
 export async function signupAction(

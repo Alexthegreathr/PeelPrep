@@ -28,6 +28,12 @@ export default async function SessionPage(
   const answerByTurn = new Map(answers.map((a) => [a.turn_id, a]));
   const inProgress = session.status === "in_progress";
 
+  const summary = session.summary_feedback as {
+    answered?: number;
+    note?: string;
+  } | null;
+  const answeredCount = Number(summary?.answered ?? 0);
+
   // Consents are needed in both modes: for voice practice answers (in progress)
   // and for Video Delivery Analysis (review). Plan + analyses only on review.
   const consents = await getConsentState();
@@ -62,19 +68,13 @@ export default async function SessionPage(
         />
       ) : (
         <div className="flex flex-col gap-4">
-          {session.summary_feedback ? (
+          {summary ? (
             <Alert>
               <AlertDescription>
                 <p>
-                  You answered{" "}
-                  {String(
-                    (session.summary_feedback as { answered?: number })
-                      .answered ?? 0,
-                  )}{" "}
-                  question(s). Request feedback on any answer below.{" "}
-                  {String(
-                    (session.summary_feedback as { note?: string }).note ?? "",
-                  )}
+                  You answered {answeredCount} question
+                  {answeredCount === 1 ? "" : "s"}. Request feedback on any
+                  answer below. {summary.note ?? ""}
                 </p>
               </AlertDescription>
             </Alert>

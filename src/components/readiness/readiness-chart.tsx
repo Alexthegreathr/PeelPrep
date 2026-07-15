@@ -57,12 +57,15 @@ export function ReadinessChart({
             {data.map((d, i) => (
               <Cell
                 key={i}
+                // Match the list beneath: green only when the category is
+                // complete, yellow while it's still being improved, neutral
+                // when untouched. (No brown for ordinary in-progress work.)
                 fill={
-                  d.pct >= 0.75
+                  d.pct >= 0.999
                     ? "var(--success)"
-                    : d.pct >= 0.4
+                    : d.pct > 0
                       ? "#ffd21f"
-                      : "var(--warning)"
+                      : "var(--border)"
                 }
               />
             ))}

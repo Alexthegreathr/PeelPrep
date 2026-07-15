@@ -256,3 +256,15 @@
     opacity: 1;
   }
 }
+
+/* Print: a clean white dossier — drop the warm mesh canvas and film grain so
+   the Peel Brief print/last-minute view doesn't waste ink or muddy the page. */
+@media print {
+  body {
+    background: #fff !important;
+    background-image: none !important;
+  }
+  body::before {
+    display: none !important;
+  }
+}

@@ -46,18 +46,32 @@ export default function HowItWorksPage() {
           From a blank page to a walk-in-ready plan in five steps.
         </p>
       </div>
-      <ol className="flex flex-col gap-8">
-        {STEPS.map((step) => (
-          <li key={step.n} className="flex gap-4">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground">
-              {step.n}
-            </span>
-            <div>
-              <h2 className="text-lg font-semibold">{step.title}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{step.body}</p>
-            </div>
-          </li>
-        ))}
+      <ol className="flex flex-col">
+        {STEPS.map((step, i) => {
+          const last = i === STEPS.length - 1;
+          return (
+            <li key={step.n} className="flex gap-4">
+              {/* Number + connective timeline line, so the steps read as one sequence. */}
+              <div className="flex flex-col items-center">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground shadow-sm">
+                  {step.n}
+                </span>
+                {last ? null : (
+                  <span
+                    aria-hidden="true"
+                    className="mt-1 w-px flex-1 bg-gradient-to-b from-primary/50 via-border to-border"
+                  />
+                )}
+              </div>
+              <div className={last ? "" : "pb-8"}>
+                <h2 className="text-lg font-semibold">{step.title}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {step.body}
+                </p>
+              </div>
+            </li>
+          );
+        })}
       </ol>
       <div className="mt-12 text-center">
         <Button asChild size="lg">

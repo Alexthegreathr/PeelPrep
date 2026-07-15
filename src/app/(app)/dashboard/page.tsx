@@ -5,7 +5,10 @@ import {
   ChevronRight,
   Flame,
   Gauge,
+  HelpCircle,
   Lightbulb,
+  MessagesSquare,
+  Sparkles,
   Video,
 } from "lucide-react";
 
@@ -170,6 +173,31 @@ export default async function DashboardPage() {
                 Open <ChevronRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
+
+            {/* Quick jumps into this interview's prep — keeps the featured card
+                useful and balanced against the readiness ring beside it. */}
+            <div className="mt-6 flex flex-wrap gap-2 border-t border-primary/15 pt-4">
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/interviews/${next.id}/brief`}>
+                  <Sparkles aria-hidden="true" /> Peel Brief
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/interviews/${next.id}/questions`}>
+                  <HelpCircle aria-hidden="true" /> Questions
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/interviews/${next.id}/practice`}>
+                  <MessagesSquare aria-hidden="true" /> Practice
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/interviews/${next.id}/readiness`}>
+                  <Gauge aria-hidden="true" /> Readiness
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -179,14 +207,13 @@ export default async function DashboardPage() {
               <Gauge className="size-4" aria-hidden="true" /> Readiness
             </CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col items-center gap-2 pt-6 text-center">
+          <CardContent className="flex flex-col items-center gap-3 pt-6 text-center">
             <ScoreRing score={score} size={116} />
-            <Link
-              href={`/interviews/${next.id}/readiness`}
-              className="text-sm underline-offset-4 hover:underline"
-            >
-              View breakdown
-            </Link>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/interviews/${next.id}/readiness`}>
+                View breakdown
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

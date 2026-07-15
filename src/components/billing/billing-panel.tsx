@@ -40,10 +40,6 @@ const FEATURES: Record<PlanKey, string[]> = {
   ],
 };
 
-function priceLabel(cents: number): string {
-  return cents === 0 ? "Free" : `$${(cents / 100).toFixed(0)}/mo`;
-}
-
 export function BillingPanel({
   currentPlan,
   status,
@@ -96,22 +92,33 @@ export function BillingPanel({
         </Alert>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid items-start gap-4 md:grid-cols-3">
         {order.map((key) => {
           const plan = PLANS[key];
           const isCurrent = key === currentPlan;
+          const isDowngrade = order.indexOf(key) < order.indexOf(currentPlan);
+          const dollars = Math.round(plan.priceCentsMonthly / 100);
           return (
             <Card
               key={key}
-              className={isCurrent ? "border-primary" : undefined}
+              className={
+                isCurrent
+                  ? "border-primary shadow-lg ring-2 ring-primary/40"
+                  : "opacity-95"
+              }
             >
-              <CardHeader className="border-b">
-                <CardTitle className="flex items-center justify-between">
-                  {plan.name}
+              <CardHeader
+                className={`border-b ${isCurrent ? "bg-primary/10" : ""}`}
+              >
+                <CardTitle className="flex items-center justify-between gap-2">
+                  <span>{plan.name}</span>
                   {isCurrent ? <Badge>Current</Badge> : null}
                 </CardTitle>
                 <p className="text-2xl font-bold">
-                  {priceLabel(plan.priceCentsMonthly)}
+                  ${dollars}
+                  <span className="text-sm font-normal text-muted-foreground">
+                    /mo
+                  </span>
                 </p>
               </CardHeader>
               <CardContent className="flex flex-col gap-4 pt-6">
@@ -162,14 +169,14 @@ export function BillingPanel({
                 ) : (
                   <Button
                     type="button"
+                    variant={isDowngrade ? "outline" : "default"}
                     onClick={() => subscribe(key)}
                     disabled={pending}
                   >
                     {pending ? (
                       <Loader2 className="animate-spin" aria-hidden="true" />
                     ) : null}
-                    {currentPlan === "free" ? "Upgrade" : "Switch"} to{" "}
-                    {plan.name}
+                    {isDowngrade ? "Downgrade" : "Upgrade"} to {plan.name}
                   </Button>
                 )}
               </CardContent>

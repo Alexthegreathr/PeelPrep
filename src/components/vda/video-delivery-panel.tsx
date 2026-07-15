@@ -13,6 +13,7 @@ import {
   Square,
   Trash2,
   Video,
+  VideoOff,
 } from "lucide-react";
 
 import {
@@ -475,13 +476,17 @@ function Recorder({
         </Alert>
       ) : null}
 
-      <div className="relative overflow-hidden rounded-xl border bg-black">
+      <div
+        className={`relative mx-auto w-full max-w-xl overflow-hidden rounded-xl border ${
+          state === "idle" ? "bg-secondary" : "bg-foreground"
+        }`}
+      >
         <video
           ref={videoRef}
           playsInline
           controls={state === "recorded"}
           src={state === "recorded" && playbackUrl ? playbackUrl : undefined}
-          className="aspect-video w-full bg-black object-contain"
+          className="aspect-video w-full bg-foreground object-contain"
           style={live && mirrored ? { transform: "scaleX(-1)" } : undefined}
         />
         {live && showGuide ? (
@@ -508,8 +513,14 @@ function Recorder({
           </div>
         ) : null}
         {state === "idle" ? (
-          <div className="absolute inset-0 flex items-center justify-center text-sm text-white/70">
-            Camera off
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-secondary px-4 text-center">
+            <VideoOff
+              className="size-8 text-muted-foreground/50"
+              aria-hidden="true"
+            />
+            <span className="text-sm text-muted-foreground">
+              Camera is off — turn it on to record.
+            </span>
           </div>
         ) : null}
         {live ? (

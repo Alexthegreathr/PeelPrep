@@ -199,34 +199,64 @@ export function InterviewHub({
             Turn this interview into a personalized briefing and practice plan.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-3 pt-6">
-          <Button asChild>
-            <Link href={`/interviews/${interview.id}/brief`}>
-              <Sparkles aria-hidden="true" /> Peel Brief
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={`/interviews/${interview.id}/questions`}>
-              Questions
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={`/interviews/${interview.id}/stories`}>Story bank</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={`/interviews/${interview.id}/practice`}>Practice</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={`/interviews/${interview.id}/readiness`}>
-              Readiness
-            </Link>
-          </Button>
+        <CardContent className="flex flex-col gap-4 pt-6">
+          {/* The Peel Brief is the hero next action, not one chip among five. */}
+          <div className="flex flex-col gap-3 rounded-xl border border-primary/30 bg-gradient-to-br from-primary/12 via-card to-card p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/20 text-accent-foreground">
+                <Sparkles className="size-4" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="font-medium">Peel Brief</p>
+                <p className="text-sm text-muted-foreground">
+                  Your personalized research dossier — company, role,
+                  interviewer intel, likely themes, and questions to ask.
+                </p>
+              </div>
+            </div>
+            <Button asChild className="shrink-0 self-start sm:self-auto">
+              <Link href={`/interviews/${interview.id}/brief`}>
+                Open Peel Brief
+              </Link>
+            </Button>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button
+              asChild
+              variant="outline"
+              className="justify-start sm:col-span-1"
+            >
+              <Link href={`/interviews/${interview.id}/questions`}>
+                Questions
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="justify-start">
+              <Link href={`/interviews/${interview.id}/stories`}>
+                Story bank
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="justify-start">
+              <Link href={`/interviews/${interview.id}/practice`}>
+                Practice
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="justify-start">
+              <Link href={`/interviews/${interview.id}/readiness`}>
+                Readiness
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="border-b">
           <CardTitle className="text-base">Manage</CardTitle>
+          <CardDescription>
+            Archive this interview when it&apos;s done, or delete it and all its
+            data.
+          </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
           <InterviewActions

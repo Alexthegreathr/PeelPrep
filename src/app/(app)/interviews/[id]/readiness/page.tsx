@@ -83,8 +83,8 @@ export default async function ReadinessPage(
       />
       <InterviewSubnav interviewId={id} active="readiness" />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
+      <div className="grid items-start gap-6 lg:grid-cols-3">
+        <Card className="border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card lg:col-span-1">
           <CardContent className="flex flex-col items-center gap-2 pt-8 text-center">
             <ScoreRing score={result.score} size={148} stroke={12} />
             <p className="mt-2 text-xs text-muted-foreground">
@@ -97,15 +97,15 @@ export default async function ReadinessPage(
         <Card className="lg:col-span-2">
           <CardHeader className="border-b">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Lightbulb className="size-4" aria-hidden="true" /> Recommended
-              next action
+              <Lightbulb className="size-4 text-warning" aria-hidden="true" />{" "}
+              Recommended next action
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
-            <p className="text-sm">
+            <p className="text-sm leading-relaxed">
               {recommendedAction ?? "Keep building your preparation."}
             </p>
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="mt-3 text-xs text-muted-foreground">
               AI-suggested next step. The numeric score above is calculated
               deterministically by the app.
             </p>

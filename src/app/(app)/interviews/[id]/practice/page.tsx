@@ -17,6 +17,10 @@ import { formatDate } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Mock practice" };
 
+function formatStatus(status: string): string {
+  return status.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+}
+
 export default async function PracticePage(
   props: PageProps<"/interviews/[id]/practice">,
 ) {
@@ -61,7 +65,7 @@ export default async function PracticePage(
           <CardHeader className="border-b">
             <CardTitle>New session</CardTitle>
           </CardHeader>
-          <CardContent className="pt-6">
+          <CardContent className="pt-2">
             <PracticeSetup
               interviewId={id}
               isFree={entitlements.key === "free"}
@@ -79,46 +83,53 @@ export default async function PracticePage(
             </p>
           ) : (
             <ul className="flex flex-col gap-2">
-              {sessions.map((s) => (
-                <li key={s.id}>
-                  <Link
-                    href={`/interviews/${id}/practice/${s.id}`}
-                    className="flex items-center justify-between gap-2 rounded-lg border p-3 text-sm transition-all hover:-translate-y-0.5 hover:bg-secondary/50 hover:shadow-sm"
-                  >
-                    <span>
-                      <span className="font-medium">
-                        {formatDate(s.started_at)}
-                      </span>
-                      <span className="block text-xs text-muted-foreground">
-                        {String(
-                          (s.config as { difficulty?: string }).difficulty ??
-                            "",
-                        )}{" "}
-                        · {s.status}
-                      </span>
-                      {s.status === "completed" ? (
-                        <span className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                          <Video className="size-3" aria-hidden="true" />{" "}
-                          Delivery analysis available
+              {sessions.map((s) => {
+                const difficulty = String(
+                  (s.config as { difficulty?: string }).difficulty ?? "",
+                );
+                const isCompleted = s.status === "completed";
+                return (
+                  <li key={s.id}>
+                    <Link
+                      href={`/interviews/${id}/practice/${s.id}`}
+                      className="flex items-center justify-between gap-2 rounded-lg border p-3 text-sm transition-all hover:-translate-y-0.5 hover:bg-secondary/50 hover:shadow-sm"
+                    >
+                      <span>
+                        <span className="font-medium">
+                          {formatDate(s.started_at)}
                         </span>
-                      ) : null}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Badge
-                        variant={
-                          s.status === "completed" ? "secondary" : "outline"
-                        }
-                      >
-                        {s.status}
-                      </Badge>
-                      <ChevronRight
-                        className="size-4 text-muted-foreground"
-                        aria-hidden="true"
-                      />
-                    </span>
-                  </Link>
-                </li>
-              ))}
+                        {difficulty ? (
+                          <span className="block text-xs capitalize text-muted-foreground">
+                            {difficulty}
+                          </span>
+                        ) : null}
+                        {isCompleted ? (
+                          <span className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                            <Video className="size-3" aria-hidden="true" />{" "}
+                            Delivery analysis available
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Badge
+                          variant={isCompleted ? "secondary" : "outline"}
+                          className={
+                            isCompleted
+                              ? "bg-success/15 text-success"
+                              : undefined
+                          }
+                        >
+                          {formatStatus(s.status)}
+                        </Badge>
+                        <ChevronRight
+                          className="size-4 text-muted-foreground"
+                          aria-hidden="true"
+                        />
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

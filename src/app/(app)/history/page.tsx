@@ -22,6 +22,14 @@ const GROUPS: { key: string; title: string; statuses: string[] }[] = [
 export default async function HistoryPage() {
   const interviews = await listInterviews();
 
+  // Only render groups that actually have interviews; when none of them do
+  // (no interviews at all, or none in a known status), fall back to the
+  // empty state rather than a near-blank page.
+  const visibleGroups = GROUPS.map((group) => ({
+    ...group,
+    rows: interviews.filter((i) => group.statuses.includes(i.status)),
+  })).filter((group) => group.rows.length > 0);
+
   return (
     <div>
       <PageHeader
@@ -30,7 +38,7 @@ export default async function HistoryPage() {
         action={<AddInterviewButton />}
       />
 
-      {interviews.length === 0 ? (
+      {visibleGroups.length === 0 ? (
         <EmptyState
           title="No interviews yet"
           description="Add the interview you're preparing for and PeelPrep will turn it into a personalized briefing and practice plan."
@@ -38,27 +46,18 @@ export default async function HistoryPage() {
         />
       ) : (
         <div className="flex flex-col gap-8">
-          {GROUPS.map((group) => {
-            const rows = interviews.filter((i) =>
-              group.statuses.includes(i.status),
-            );
-            if (rows.length === 0) return null;
-            return (
-              <section key={group.key}>
-                <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-                  {group.title}
-                </h2>
-                <ul className="flex flex-col gap-2">
-                  {rows.map((interview) => (
-                    <InterviewRowItem
-                      key={interview.id}
-                      interview={interview}
-                    />
-                  ))}
-                </ul>
-              </section>
-            );
-          })}
+          {visibleGroups.map((group) => (
+            <section key={group.key}>
+              <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
+                {group.title}
+              </h2>
+              <ul className="flex flex-col gap-2">
+                {group.rows.map((interview) => (
+                  <InterviewRowItem key={interview.id} interview={interview} />
+                ))}
+              </ul>
+            </section>
+          ))}
         </div>
       )}
     </div>
@@ -87,7 +86,7 @@ function InterviewRowItem({ interview }: { interview: InterviewRow }) {
               {STATUS_LABELS[interview.status] ?? interview.status}
             </Badge>
           </p>
-          <p className="truncate text-sm text-muted-foreground">
+          <p className="line-clamp-2 text-sm text-muted-foreground sm:line-clamp-none sm:truncate">
             {interview.position_title || "Position not set"}
             {when ? ` · ${when}` : ""}
             {interview.interview_at

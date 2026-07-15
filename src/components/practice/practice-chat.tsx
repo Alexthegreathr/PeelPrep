@@ -242,21 +242,45 @@ export function PracticeChat({
       </div>
 
       <ol className="flex flex-col gap-4">
-        {turns.map((turn) => (
-          <li
-            key={turn.id}
-            className={
-              turn.role === "interviewer"
-                ? "max-w-2xl rounded-2xl rounded-tl-sm bg-secondary px-4 py-3"
-                : "max-w-2xl self-end rounded-2xl rounded-tr-sm bg-primary/15 px-4 py-3"
-            }
-          >
-            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {turn.role === "interviewer" ? "Interviewer" : "You"}
-            </p>
-            <p className="whitespace-pre-wrap text-sm">{turn.content}</p>
-          </li>
-        ))}
+        {turns.map((turn) => {
+          // The latest interviewer turn is the live question — make it the focus.
+          const isCurrentQuestion =
+            awaitingAnswer &&
+            turn.id === last?.id &&
+            turn.role === "interviewer";
+          return (
+            <li
+              key={turn.id}
+              className={
+                isCurrentQuestion
+                  ? "max-w-2xl rounded-2xl rounded-tl-sm border border-primary/30 bg-card px-4 py-4 shadow-sm ring-1 ring-primary/10"
+                  : turn.role === "interviewer"
+                    ? "max-w-2xl rounded-2xl rounded-tl-sm bg-secondary px-4 py-3"
+                    : "max-w-2xl self-end rounded-2xl rounded-tr-sm bg-primary/15 px-4 py-3"
+              }
+            >
+              <div className="mb-1 flex items-center gap-2">
+                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {turn.role === "interviewer" ? "Interviewer" : "You"}
+                </span>
+                {isCurrentQuestion ? (
+                  <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-semibold text-accent-foreground">
+                    Current
+                  </span>
+                ) : null}
+              </div>
+              <p
+                className={
+                  isCurrentQuestion
+                    ? "whitespace-pre-wrap text-base font-medium leading-relaxed text-foreground"
+                    : "whitespace-pre-wrap text-sm"
+                }
+              >
+                {turn.content}
+              </p>
+            </li>
+          );
+        })}
         {pending ? (
           <li className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />

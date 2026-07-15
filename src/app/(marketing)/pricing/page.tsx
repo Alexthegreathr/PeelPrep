@@ -53,15 +53,21 @@ export default function PricingPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid items-start gap-6 md:grid-cols-3">
         {(["free", "plus", "pro"] as const).map((key) => {
           const plan = PLANS[key];
           return (
             <Card
               key={key}
-              className={key === "plus" ? "border-primary" : undefined}
+              className={
+                key === "plus"
+                  ? "border-primary shadow-xl ring-2 ring-primary/40 md:-translate-y-3"
+                  : undefined
+              }
             >
-              <CardHeader className="border-b">
+              <CardHeader
+                className={`border-b ${key === "plus" ? "bg-primary/10" : ""}`}
+              >
                 <CardTitle className="flex items-center justify-between">
                   {plan.name}
                   {key === "plus" ? (
@@ -70,17 +76,11 @@ export default function PricingPage() {
                     </span>
                   ) : null}
                 </CardTitle>
-                <p className="text-3xl font-bold">
-                  {plan.priceCentsMonthly === 0
-                    ? "Free"
-                    : `$${plan.priceCentsMonthly / 100}`}
-                  {plan.priceCentsMonthly === 0 ? (
-                    ""
-                  ) : (
-                    <span className="text-base font-normal text-muted-foreground">
-                      /mo
-                    </span>
-                  )}
+                <p className="text-3xl font-bold tabular-nums">
+                  ${plan.priceCentsMonthly / 100}
+                  <span className="text-base font-normal text-muted-foreground">
+                    /mo
+                  </span>
                 </p>
               </CardHeader>
               <CardContent className="flex flex-col gap-4 pt-6">

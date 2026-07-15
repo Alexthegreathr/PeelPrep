@@ -23,7 +23,7 @@ export function HeroPreview() {
         <Gauge className="size-3.5 text-accent-foreground" aria-hidden="true" />{" "}
         Readiness 80/100
       </FloatChip>
-      <FloatChip className="bottom-6 left-1/2 -translate-x-1/2" delay="2.6s">
+      <FloatChip className="-bottom-4 left-1/2 -translate-x-1/2" delay="2.6s">
         <Sparkles
           className="size-3.5 text-accent-foreground"
           aria-hidden="true"

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useId } from "react";
-import { CircleAlert } from "lucide-react";
+import { useActionState, useId, useState } from "react";
+import { CircleAlert, Eye, EyeOff } from "lucide-react";
 
 import { loginAction } from "@/app/(auth)/actions";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,6 +16,7 @@ export function LoginForm({ next }: { next?: string }) {
   const [state, action] = useActionState(loginAction, initialFormState);
   const emailId = useId();
   const passwordId = useId();
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <form action={action} className="flex flex-col gap-5" noValidate>
@@ -62,20 +63,36 @@ export function LoginForm({ next }: { next?: string }) {
           <Label htmlFor={passwordId}>Password</Label>
           <Link
             href="/reset-password"
-            className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            className="text-sm font-medium text-foreground/70 underline-offset-4 hover:text-foreground hover:underline"
           >
             Forgot password?
           </Link>
         </div>
-        <Input
-          id={passwordId}
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          aria-invalid={Boolean(state.fieldErrors?.password)}
-          aria-describedby={`${passwordId}-error`}
-        />
+        <div className="relative">
+          <Input
+            id={passwordId}
+            name="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            required
+            className="pr-10"
+            aria-invalid={Boolean(state.fieldErrors?.password)}
+            aria-describedby={`${passwordId}-error`}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((visible) => !visible)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+            className="absolute top-1/2 right-1 flex size-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            {showPassword ? (
+              <EyeOff className="size-4" aria-hidden="true" />
+            ) : (
+              <Eye className="size-4" aria-hidden="true" />
+            )}
+          </button>
+        </div>
         <FieldError
           id={`${passwordId}-error`}
           messages={state.fieldErrors?.password}

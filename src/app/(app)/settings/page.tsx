@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CircleCheck } from "lucide-react";
+import { CircleCheck, TriangleAlert } from "lucide-react";
 
 import { requireUser } from "@/lib/auth/dal";
 import { getConsentState } from "@/lib/data/consent";
@@ -158,8 +158,12 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-destructive/30">
-          <CardHeader className="border-b">
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardHeader className="border-b border-destructive/20">
+            <span className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-destructive">
+              <TriangleAlert className="size-3.5" aria-hidden="true" />
+              Danger zone
+            </span>
             <CardTitle>Delete your account</CardTitle>
             <CardDescription>
               Permanently erase your account and all associated data. This

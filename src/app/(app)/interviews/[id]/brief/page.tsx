@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { CircleAlert, Info, Lock, Printer } from "lucide-react";
+import { Info, Lock, Printer, RefreshCw } from "lucide-react";
 
 import { getInterview } from "@/lib/data/interviews";
 import { getBriefData } from "@/lib/data/brief";
@@ -112,8 +112,8 @@ export default async function BriefPage(
           </AlertDescription>
         </Alert>
         {data.fingerprintStale ? (
-          <Alert variant="destructive">
-            <CircleAlert aria-hidden="true" />
+          <Alert className="border-warning/40 bg-warning/10 text-warning">
+            <RefreshCw aria-hidden="true" />
             <AlertDescription>
               <p>
                 Your interview inputs changed since this brief was generated.

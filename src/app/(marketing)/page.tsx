@@ -105,12 +105,25 @@ export default function LandingPage() {
               Everything for the interview, in one place
             </h2>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            <Feature
-              icon={<FileText className="size-5" aria-hidden="true" />}
-              title="The Peel Brief"
-              body="Company priorities, role analysis, respectful interviewer context, likely themes, and questions to ask — each labeled AI guidance, with sources shown."
-            />
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Lead feature — elevated and spanning the full height beside the two supporting cards. */}
+            <div className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-primary/50 bg-card p-7 shadow-sm ring-1 ring-primary/10 transition-transform hover:-translate-y-1 md:row-span-2">
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/60 to-transparent"
+              />
+              <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/40 to-accent/25 text-accent-foreground transition-transform group-hover:scale-105">
+                <FileText className="size-6" aria-hidden="true" />
+              </div>
+              <h3 className="font-heading text-xl font-semibold">
+                The Peel Brief
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Company priorities, role analysis, respectful interviewer
+                context, likely themes, and questions to ask — each labeled AI
+                guidance, with sources shown.
+              </p>
+            </div>
             <Feature
               icon={<MessagesSquare className="size-5" aria-hidden="true" />}
               title="Typed mock interviews"
@@ -160,14 +173,10 @@ export default function LandingPage() {
                     {plan.name}
                   </p>
                   <p className="text-3xl font-bold tabular-nums">
-                    {plan.priceCentsMonthly === 0
-                      ? "Free"
-                      : `$${plan.priceCentsMonthly / 100}`}
-                    {plan.priceCentsMonthly > 0 ? (
-                      <span className="text-base font-medium text-muted-foreground">
-                        /mo
-                      </span>
-                    ) : null}
+                    ${plan.priceCentsMonthly / 100}
+                    <span className="text-base font-medium text-muted-foreground">
+                      /mo
+                    </span>
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {PLAN_TAGLINES[key]}
@@ -261,7 +270,7 @@ function Section({
 }: React.ComponentProps<"section"> & { muted?: boolean }) {
   return (
     <section
-      className={`px-6 py-20 sm:py-24 ${muted ? "bg-secondary/30" : ""}`}
+      className={`px-6 py-16 sm:py-20 ${muted ? "bg-secondary/30" : ""}`}
       {...props}
     >
       {children}

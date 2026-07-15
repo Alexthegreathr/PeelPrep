@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { Download, Loader2, TriangleAlert } from "lucide-react";
 
 import {
@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/toast";
 import {
@@ -39,38 +40,50 @@ export function ConsentToggle({
   const [pending, startTransition] = useTransition();
   const [failed, setFailed] = useState(false);
   const toast = useToast();
+  const labelId = useId();
+  const descId = useId();
+
+  function handleChange(next: boolean) {
+    setGranted(next);
+    setFailed(false);
+    startTransition(async () => {
+      const res = await updateConsent(type, next);
+      if (res && !res.ok) {
+        setGranted(!next);
+        setFailed(true);
+        toast.error("Couldn't update this setting.");
+      } else {
+        toast.success(`${label} ${next ? "enabled" : "disabled"}`);
+      }
+    });
+  }
 
   return (
     <div className="flex flex-col gap-2 py-3">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col">
-          <span className="text-sm font-medium">{label}</span>
-          <span className="text-xs text-muted-foreground">{description}</span>
+          <span id={labelId} className="text-sm font-medium">
+            {label}
+          </span>
+          <span id={descId} className="text-xs text-muted-foreground">
+            {description}
+          </span>
         </div>
-        <label className="flex shrink-0 items-center gap-2 text-sm">
-          <input
-            type="checkbox"
+        <div className="flex shrink-0 items-center gap-2">
+          <span
+            aria-hidden="true"
+            className="w-6 text-right text-xs text-muted-foreground tabular-nums"
+          >
+            {granted ? "On" : "Off"}
+          </span>
+          <Switch
             checked={granted}
             disabled={pending}
-            onChange={(e) => {
-              const next = e.target.checked;
-              setGranted(next);
-              setFailed(false);
-              startTransition(async () => {
-                const res = await updateConsent(type, next);
-                if (res && !res.ok) {
-                  setGranted(!next);
-                  setFailed(true);
-                  toast.error("Couldn't update this setting.");
-                } else {
-                  toast.success(`${label} ${next ? "enabled" : "disabled"}`);
-                }
-              });
-            }}
-            className="size-4 rounded border-input accent-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onCheckedChange={handleChange}
+            aria-labelledby={labelId}
+            aria-describedby={descId}
           />
-          {granted ? "On" : "Off"}
-        </label>
+        </div>
       </div>
       {failed ? (
         <p className="text-xs text-destructive">

@@ -6,6 +6,7 @@ import { Loader2, MessageSquareText, RotateCcw } from "lucide-react";
 
 import { requestFeedbackAction } from "@/app/(app)/interviews/[id]/practice/actions";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { AnswerRow } from "@/lib/data/practice";
 
@@ -80,6 +81,14 @@ export function AnswerFeedback({
     );
   }
 
+  // Derived from the existing rubric scores — not an invented metric.
+  const scores = Object.values(feedback.rubric).map((r) => r.score);
+  const overall =
+    scores.length > 0
+      ? scores.reduce((sum, s) => sum + s, 0) / scores.length
+      : null;
+  const tone = overall !== null ? overallTone(overall) : null;
+
   return (
     <div className="mt-4 rounded-lg border bg-secondary/30 p-4">
       <div className="mb-3 flex items-center justify-between">
@@ -100,6 +109,32 @@ export function AnswerFeedback({
         </Button>
       </div>
 
+      {overall !== null && tone ? (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card p-3">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Overall
+            </span>
+            <span className="font-heading text-2xl leading-none tabular-nums">
+              {overall.toFixed(1)}
+            </span>
+            <span className="text-sm text-muted-foreground">/ 5</span>
+          </div>
+          <Badge variant="secondary" className={tone.className}>
+            {tone.label}
+          </Badge>
+        </div>
+      ) : null}
+
+      <div className="mb-4 rounded-md border border-primary/30 bg-primary/10 p-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">
+          Top improvement
+        </p>
+        <p className="mt-0.5 whitespace-pre-wrap text-sm">
+          {feedback.top_improvement}
+        </p>
+      </div>
+
       <div className="grid gap-x-4 gap-y-2 sm:grid-cols-2">
         {Object.entries(feedback.rubric).map(([key, val]) => (
           <div key={key} className="flex items-center gap-2 text-xs">
@@ -111,7 +146,7 @@ export function AnswerFeedback({
               aria-hidden="true"
             >
               <span
-                className="block h-full bg-primary"
+                className={`block h-full ${barColor(val.score)}`}
                 style={{ width: `${(val.score / 5) * 100}%` }}
               />
             </span>
@@ -133,11 +168,6 @@ export function AnswerFeedback({
         {feedback.missing ? (
           <FbRow label="What was missing" value={feedback.missing} />
         ) : null}
-        <FbRow
-          label="Top improvement"
-          value={feedback.top_improvement}
-          highlight
-        />
         {feedback.improved_outline ? (
           <FbRow label="Improved outline" value={feedback.improved_outline} />
         ) : null}
@@ -178,4 +208,25 @@ function FbRow({
       <dd className="whitespace-pre-wrap">{value}</dd>
     </div>
   );
+}
+
+// Qualitative word + tone for the derived overall average (not an invented score).
+function overallTone(score: number): { label: string; className: string } {
+  if (score >= 4.3)
+    return { label: "Strong", className: "bg-success/15 text-success" };
+  if (score >= 3.5)
+    return { label: "Solid", className: "bg-success/15 text-success" };
+  if (score >= 2.5)
+    return { label: "Developing", className: "bg-warning/10 text-warning" };
+  return {
+    label: "Needs work",
+    className: "bg-muted-foreground/15 text-muted-foreground",
+  };
+}
+
+// Encode each rubric score by color instead of a uniform yellow.
+function barColor(score: number): string {
+  if (score >= 4) return "bg-success";
+  if (score >= 3) return "bg-primary";
+  return "bg-muted-foreground/30";
 }

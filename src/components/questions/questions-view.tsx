@@ -73,7 +73,7 @@ export function QuestionsView({
 
   return (
     <div className="flex flex-col gap-6">
-      <Alert>
+      <Alert className="max-w-3xl">
         <AlertDescription>
           <p>
             Predicted questions are preparation suggestions — they are not

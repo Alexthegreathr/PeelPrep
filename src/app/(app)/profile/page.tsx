@@ -27,7 +27,7 @@ export default async function ProfilePage() {
         description="Your name, headline, and time zone personalize your preparation."
       />
 
-      <div className="flex flex-col gap-8">
+      <div className="grid items-start gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader className="border-b">
             <CardTitle>Account</CardTitle>

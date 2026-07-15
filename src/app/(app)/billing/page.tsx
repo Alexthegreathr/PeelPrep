@@ -56,6 +56,9 @@ export default async function BillingPage(props: PageProps<"/billing">) {
             {meters.map((m) => {
               const pct =
                 m.limit > 0 ? Math.min(100, (m.used / m.limit) * 100) : 0;
+              // Give any non-zero usage a small minimum width so a low value
+              // (e.g. 1/60) still reads as a visible sliver rather than nothing.
+              const fillWidth = m.used > 0 ? `max(0.5rem, ${pct}%)` : "0%";
               return (
                 <div key={m.feature}>
                   <div className="mb-1 flex justify-between text-sm">
@@ -66,8 +69,8 @@ export default async function BillingPage(props: PageProps<"/billing">) {
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
                     <div
-                      className="h-full bg-primary"
-                      style={{ width: `${pct}%` }}
+                      className="h-full rounded-full bg-primary"
+                      style={{ width: fillWidth }}
                     />
                   </div>
                 </div>
