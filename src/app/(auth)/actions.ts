@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { provisionDemoUser } from "@/lib/demo/provision";
 import { checkAuthRateLimit } from "@/lib/security/rate-limit";
 import { CONSENT_VERSIONS } from "@/lib/auth/consent";
 import { sanitizeNextPath } from "@/lib/auth/redirect";
@@ -80,25 +81,30 @@ export async function loginAction(
 // ── Demo one-tap sign-in ──────────────────────────────────────────────────
 
 /**
- * Signs the visitor into the shared demo account with a single tap — no signup.
+ * One-tap demo entry — gives every visitor their OWN private, isolated sandbox.
  * DEMO-ONLY: guarded by NEXT_PUBLIC_DEMO_MODE so it never exists in a real
- * deployment. Uses fixed, well-known demo credentials (overridable via env) and
- * deliberately skips the per-email rate limit, since every visitor logs into
- * the same account. Requires the demo account to be seeded (scripts/seed-demo).
+ * deployment. Creates a fresh anonymous Supabase session (requires "anonymous
+ * sign-ins" enabled in the project's auth settings), then provisions that
+ * account with Pro + VDA consents + the fictional sample data.
  */
 export async function startDemoSessionAction(): Promise<void> {
   if (process.env.NEXT_PUBLIC_DEMO_MODE !== "1") {
     redirect("/login");
   }
 
-  const email = process.env.DEMO_EMAIL ?? "demo@peelprep.example";
-  const password = process.env.DEMO_PASSWORD ?? "peelprep-demo-123";
-
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInAnonymously();
 
-  if (error) {
+  if (error || !data.user) {
     redirect("/login?error=demo_unavailable");
+  }
+
+  try {
+    await provisionDemoUser(data.user.id);
+  } catch (provisionError) {
+    // Never block the visitor on a partial seed — they still land on a working
+    // (if emptier) dashboard.
+    console.error("demo provisioning failed", provisionError);
   }
 
   redirect("/dashboard");
